@@ -1,6 +1,6 @@
 {
   "settings": {
-    "name": "Site-11-16_1740",
+    "name": "htrivino",
     "currentPage": "index.html",
     "theme": {
       "name": "mobirise4",
@@ -31,6 +31,12 @@
     "path": "@PROJECT_PATH@",
     "versionFirst": "4.11.4",
     "siteFonts": [],
+    "favicon": "",
+    "": "on",
+    "robotsSwitcher": false,
+    "sitemapSwitcher": false,
+    "sitemapSwitcherAuto": false,
+    "siteUrl": "undefined",
     "uniqCompNum": 3,
     "versionPublish": "4.11.4"
   },
