@@ -710,12 +710,20 @@ iframe.lazy-placeholder,
 section.lazy-placeholder:after {
   opacity: 0.3;
 }
-.cid-rI9ao5I8AO {
+.cid-rI9JWqQ5D9 {
+  padding-top: 15px;
+  padding-bottom: 60px;
+  background-color: #232323;
+}
+.cid-rI9JWqQ5D9 P {
+  color: #767676;
+}
+.cid-rI9KMSqHZn {
   padding-top: 30px;
-  padding-bottom: 30px;
+  padding-bottom: 0px;
   background-color: #ffffff;
 }
-.cid-rI9ao5I8AO .mbr-section-subtitle {
+.cid-rI9KMSqHZn .mbr-section-subtitle {
   color: #767676;
 }
 .cid-rI8N42Yt1P {
