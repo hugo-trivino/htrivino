@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Hugo Trivino" />
+
+
+<title>Desicion Trees &amp; Association Rules</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- NOTE: add "navbar-inverse" class for an alternate navbar background -->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Hugo Trivino : Data Mining examples </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="Modeling_and_Linear_Regression.html">Modeling and Linear Regression</a></li>
+        <li><a href="Decision_Trees_and_Association_Rules.html">Decision Trees and Association Rules</a></li>
+        <li><a href="Clustering_and_PCA.html">Clustering and PCA</a></li>
+        <li><a href="Locality_sensitive_hashing_and_Recommender_systems.html">Locality sensitive hashing and Recommender systems</a></li>
+        <li><a href="http:/htrivino.com">personal Website</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Desicion Trees &amp; Association Rules</h1>
+<h4 class="author">Hugo Trivino</h4>
+
+</div>
+
+
+<pre class="r"><code>setwd(&quot;.&quot;)
+set.seed(1122)
+options(&quot;digits&quot;=3)
+library(caret)
+library(dplyr)
+library(psych)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(ROCR)</code></pre>
+<div id="decision-tree-classification" class="section level1">
+<h1>2.1 Decision tree classification</h1>
+<div id="a-remove-all-the-observations-that-have-in-them" class="section level2">
+<h2>a) Remove all the observations that have ‘?’ in them</h2>
+<pre class="r"><code>adultTrain.df &lt;- read.csv(&quot;adult-train.csv&quot;,sep=&quot;,&quot;,header=T,stringsAsFactors = T)
+adultTest.df &lt;- read.csv(&quot;adult-test.csv&quot;,sep=&quot;,&quot;,header=T,stringsAsFactors = T)
+
+head(adultTest.df,6)</code></pre>
+<pre><code>##   age workclass fnlwgt    education education_num     marital_status        occupation  relationship  race    sex
+## 1  25   Private 226802         11th             7      Never-married Machine-op-inspct     Own-child Black   Male
+## 2  38   Private  89814      HS-grad             9 Married-civ-spouse   Farming-fishing       Husband White   Male
+## 3  28 Local-gov 336951   Assoc-acdm            12 Married-civ-spouse   Protective-serv       Husband White   Male
+## 4  44   Private 160323 Some-college            10 Married-civ-spouse Machine-op-inspct       Husband Black   Male
+## 5  18         ? 103497 Some-college            10      Never-married                 ?     Own-child White Female
+## 6  34   Private 198693         10th             6      Never-married     Other-service Not-in-family White   Male
+##   capital_gain capital_loss hours_per_week native_country income
+## 1            0            0             40  United-States  &lt;=50K
+## 2            0            0             50  United-States  &lt;=50K
+## 3            0            0             40  United-States   &gt;50K
+## 4         7688            0             40  United-States   &gt;50K
+## 5            0            0             30  United-States  &lt;=50K
+## 6            0            0             30  United-States  &lt;=50K</code></pre>
+<pre class="r"><code>idx=c()
+for (field in adultTrain.df) { idx &lt;- c(idx,which(field == &quot;?&quot;))}
+adultTrain.df &lt;- adultTrain.df[-c(idx),]
+idx=c()
+for (field in adultTest.df) { idx &lt;- c(idx,which(field == &quot;?&quot;))}
+adultTest.df &lt;- adultTest.df[-c(idx),]
+rm(field)
+rm(idx)</code></pre>
+</div>
+<div id="b-build-a-decision-tree-model-using-rpart" class="section level2">
+<h2>b) Build a decision tree model using rpart()</h2>
+<pre class="r"><code>model &lt;- rpart(income ~ ., method=&quot;class&quot;, data=adultTrain.df)</code></pre>
+<pre class="r"><code>summary(model)</code></pre>
+<pre><code>## Call:
+## rpart(formula = income ~ ., data = adultTrain.df, method = &quot;class&quot;)
+##   n= 30161 
+## 
+##       CP nsplit rel error xerror    xstd
+## 1 0.1300      0     1.000  1.000 0.01000
+## 2 0.0642      2     0.740  0.740 0.00897
+## 3 0.0373      3     0.676  0.676 0.00865
+## 4 0.0100      4     0.639  0.639 0.00846
+## 
+## Variable importance
+##   relationship marital_status   capital_gain      education  education_num            sex     occupation 
+##             24             23             10              9              9              8              7 
+##            age hours_per_week 
+##              5              3 
+## 
+## Node number 1: 30161 observations,    complexity param=0.13
+##   predicted class=&lt;=50K  expected loss=0.249  P(node) =1
+##     class counts: 22653  7508
+##    probabilities: 0.751 0.249 
+##   left son=2 (16292 obs) right son=3 (13869 obs)
+##   Primary splits:
+##       relationship   splits as  RLLLLR, improve=2280, (0 missing)
+##       marital_status splits as  LRRLLLL, improve=2240, (0 missing)
+##       capital_gain   &lt; 5120 to the left,  improve=1540, (0 missing)
+##       education      splits as  LLLLLLLLLRRLRLRL, improve=1190, (0 missing)
+##       education_num  &lt; 12.5 to the left,  improve=1190, (0 missing)
+##   Surrogate splits:
+##       marital_status splits as  LRRLLLL, agree=0.993, adj=0.984, (0 split)
+##       sex            splits as  LR, agree=0.691, adj=0.328, (0 split)
+##       age            &lt; 33.5 to the left,  agree=0.645, adj=0.229, (0 split)
+##       occupation     splits as  -LLRRRLLLLRRLLR, agree=0.620, adj=0.175, (0 split)
+##       hours_per_week &lt; 43.5 to the left,  agree=0.604, adj=0.138, (0 split)
+## 
+## Node number 2: 16292 observations,    complexity param=0.0373
+##   predicted class=&lt;=50K  expected loss=0.0697  P(node) =0.54
+##     class counts: 15157  1135
+##    probabilities: 0.930 0.070 
+##   left son=4 (15992 obs) right son=5 (300 obs)
+##   Primary splits:
+##       capital_gain   &lt; 7070 to the left,  improve=492, (0 missing)
+##       education      splits as  LLLLLLLLLLRLRLRL, improve=143, (0 missing)
+##       education_num  &lt; 13.5 to the left,  improve=143, (0 missing)
+##       occupation     splits as  -LLLRLLLLLRRLLL, improve=117, (0 missing)
+##       hours_per_week &lt; 42.5 to the left,  improve=108, (0 missing)
+## 
+## Node number 3: 13869 observations,    complexity param=0.13
+##   predicted class=&lt;=50K  expected loss=0.46  P(node) =0.46
+##     class counts:  7496  6373
+##    probabilities: 0.540 0.460 
+##   left son=6 (9719 obs) right son=7 (4150 obs)
+##   Primary splits:
+##       education     splits as  LLLLLLLLLRRLRLRL, improve=900, (0 missing)
+##       education_num &lt; 12.5 to the left,  improve=900, (0 missing)
+##       occupation    splits as  -LRLRLLLLLRRRRL, improve=841, (0 missing)
+##       capital_gain  &lt; 5100 to the left,  improve=699, (0 missing)
+##       capital_loss  &lt; 1780 to the left,  improve=241, (0 missing)
+##   Surrogate splits:
+##       education_num  &lt; 12.5 to the left,  agree=1.000, adj=1.000, (0 split)
+##       occupation     splits as  -LLLRLLLLLRLLLL, agree=0.792, adj=0.306, (0 split)
+##       capital_gain   &lt; 7490 to the left,  agree=0.717, adj=0.054, (0 split)
+##       native_country splits as  -LLRLLLLLRRLLLLRLLRRLLLRLLLLLRLLLLRRLLLLL, agree=0.709, adj=0.027, (0 split)
+##       capital_loss   &lt; 1890 to the left,  agree=0.706, adj=0.018, (0 split)
+## 
+## Node number 4: 15992 observations
+##   predicted class=&lt;=50K  expected loss=0.0528  P(node) =0.53
+##     class counts: 15147   845
+##    probabilities: 0.947 0.053 
+## 
+## Node number 5: 300 observations
+##   predicted class=&gt;50K   expected loss=0.0333  P(node) =0.00995
+##     class counts:    10   290
+##    probabilities: 0.033 0.967 
+## 
+## Node number 6: 9719 observations,    complexity param=0.0642
+##   predicted class=&lt;=50K  expected loss=0.342  P(node) =0.322
+##     class counts:  6397  3322
+##    probabilities: 0.658 0.342 
+##   left son=12 (9219 obs) right son=13 (500 obs)
+##   Primary splits:
+##       capital_gain  &lt; 5100 to the left,  improve=432, (0 missing)
+##       occupation    splits as  -RLLRLLLLLRRRRL, improve=231, (0 missing)
+##       education     splits as  LLLLLLLRR--R-L-R, improve=164, (0 missing)
+##       education_num &lt; 8.5  to the left,  improve=164, (0 missing)
+##       age           &lt; 35.5 to the left,  improve=131, (0 missing)
+## 
+## Node number 7: 4150 observations
+##   predicted class=&gt;50K   expected loss=0.265  P(node) =0.138
+##     class counts:  1099  3051
+##    probabilities: 0.265 0.735 
+## 
+## Node number 12: 9219 observations
+##   predicted class=&lt;=50K  expected loss=0.307  P(node) =0.306
+##     class counts:  6388  2831
+##    probabilities: 0.693 0.307 
+## 
+## Node number 13: 500 observations
+##   predicted class=&gt;50K   expected loss=0.018  P(node) =0.0166
+##     class counts:     9   491
+##    probabilities: 0.018 0.982</code></pre>
+<div id="i-relationshipmarital_status-and-capital_gain-are-the-most-important-predictors-in-descending-order." class="section level3">
+<h3>(i) relationship,marital_status, and capital_gain are the most important predictors in descending order.</h3>
+<pre class="r"><code>rpart.plot(model, extra=104, fallen.leaves = T, type=4, main=&quot;Rpart on adult train data (Full Tree)&quot;)</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="ii-the-first-split-is-done-on-relationship.-the-default-predicted-class-is-50k-due-to-class-inbalance.-the-distribution-of-observations-between-the-50k-and-50k-classes-at-first-node-are-75-and-25-respectively-with-22653-and-7508-observations." class="section level3">
+<h3>(ii) The first split is done on relationship. The default predicted class is “&lt;=50K” due to class inbalance. The distribution of observations between the “&lt;=50K” and “&gt;50K” classes at first node are 75% and 25% respectively (with 22653 and 7508 observations).</h3>
+</div>
+</div>
+<div id="c-use-the-trained-model-from-b-to-predict-the-test-dataset." class="section level2">
+<h2>(c) Use the trained model from (b) to predict the test dataset.</h2>
+<pre class="r"><code>pred &lt;- predict(model, adultTest.df, type=&quot;class&quot;)
+confusionMatrix(pred, as.factor(adultTest.df$income))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction &lt;=50K  &gt;50K
+##      &lt;=50K 10772  1837
+##      &gt;50K    588  1863
+##                                         
+##                Accuracy : 0.839         
+##                  95% CI : (0.833, 0.845)
+##     No Information Rate : 0.754         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.51          
+##                                         
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16        
+##                                         
+##             Sensitivity : 0.948         
+##             Specificity : 0.504         
+##          Pos Pred Value : 0.854         
+##          Neg Pred Value : 0.760         
+##              Prevalence : 0.754         
+##          Detection Rate : 0.715         
+##    Detection Prevalence : 0.837         
+##       Balanced Accuracy : 0.726         
+##                                         
+##        &#39;Positive&#39; Class : &lt;=50K         
+## </code></pre>
+<div id="i-the-balanced-accuracy-of-the-model-is-72.6" class="section level3">
+<h3>(i) The balanced accuracy of the model is 72.6%</h3>
+</div>
+<div id="ii-the-balanced-error-rate-of-the-model-is-27.4" class="section level3">
+<h3>(ii) The balanced error rate of the model is 27.4%</h3>
+</div>
+<div id="iii-the-sensitivity-and-specificity-are-94.8-and-50.4-respectively." class="section level3">
+<h3>(iii) The sensitivity and specificity are 94.8% and 50.4% respectively.</h3>
+</div>
+<div id="iv-the-auc-of-the-roc-curve-is-84.3." class="section level3">
+<h3>(iv) The AUC of the ROC curve is 84.3%.</h3>
+<pre class="r"><code>pred.rocr &lt;- predict(model, newdata=adultTest.df, type=&quot;prob&quot;)[,2]
+f.pred &lt;- prediction(pred.rocr, adultTest.df$income)
+f.perf &lt;- performance(f.pred, &quot;tpr&quot;, &quot;fpr&quot;)
+auc &lt;- performance(f.pred, measure = &quot;auc&quot;)
+plot(f.perf, colorize=T, lwd=3,main=paste(&quot;AUC of ROC is &quot;, round(auc@y.values[[1]], 4)))
+abline(0,1)</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+</div>
+<div id="din-this-case-this-tree-would-not-benefit-from-pruning-since-at-each-split-level-the-error-decreases-including-the-cross-validation-error.-therefore-pruning-this-tree-will-increase-the-overall-error-of-the-model." class="section level2">
+<h2>(d)In this case, this tree would not benefit from pruning since at each split level the error decreases, including the cross validation error. Therefore, pruning this tree will increase the overall error of the model.</h2>
+<pre class="r"><code>options(&quot;digits&quot;=5)
+printcp(model)</code></pre>
+<pre><code>## 
+## Classification tree:
+## rpart(formula = income ~ ., data = adultTrain.df, method = &quot;class&quot;)
+## 
+## Variables actually used in tree construction:
+## [1] capital_gain education    relationship
+## 
+## Root node error: 7508/30161 = 0.249
+## 
+## n= 30161 
+## 
+##       CP nsplit rel error xerror    xstd
+## 1 0.1300      0     1.000  1.000 0.01000
+## 2 0.0642      2     0.740  0.740 0.00897
+## 3 0.0373      3     0.676  0.676 0.00865
+## 4 0.0100      4     0.639  0.639 0.00846</code></pre>
+</div>
+<div id="e-working-with-class-imbalance-problem-in-the-training-dataset." class="section level2">
+<h2>e) Working with class imbalance problem in the training dataset.</h2>
+<div id="ithere-are-22653-observations-in-the-class-50k-and-7508-observations-with-the-class-50k" class="section level3">
+<h3>(i)There are 22653 observations in the class “&lt;=50K” and 7508 observations with the class “&gt;50K”</h3>
+<pre class="r"><code>table (adultTrain.df$income)</code></pre>
+<pre><code>## 
+## &lt;=50K  &gt;50K 
+## 22653  7508</code></pre>
+</div>
+<div id="ii-creating-a-balanced-training-dataset-by-undersampling." class="section level3">
+<h3>(ii) Creating a balanced training dataset by undersampling.</h3>
+<pre class="r"><code>newTrainingDataset &lt;- adultTrain.df[-sample(which(adultTrain.df$income ==&quot;&lt;=50K&quot;),22653-7508),]
+table(newTrainingDataset$income)</code></pre>
+<pre><code>## 
+## &lt;=50K  &gt;50K 
+##  7508  7508</code></pre>
+</div>
+<div id="iii-training-a-new-model-based-on-the-new-balanced-training-dataset." class="section level3">
+<h3>(iii) Training a new model based on the new balanced training dataset.</h3>
+<pre class="r"><code>balanceModel &lt;- rpart(income ~ ., method=&quot;class&quot;, data=newTrainingDataset)</code></pre>
+<pre class="r"><code>balPred &lt;- predict(balanceModel, adultTest.df, type=&quot;class&quot;)
+confusionMatrix(balPred, as.factor(adultTest.df$income))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction &lt;=50K &gt;50K
+##      &lt;=50K  8826  633
+##      &gt;50K   2534 3067
+##                                         
+##                Accuracy : 0.79          
+##                  95% CI : (0.783, 0.796)
+##     No Information Rate : 0.754         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.516         
+##                                         
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16        
+##                                         
+##             Sensitivity : 0.777         
+##             Specificity : 0.829         
+##          Pos Pred Value : 0.933         
+##          Neg Pred Value : 0.548         
+##              Prevalence : 0.754         
+##          Detection Rate : 0.586         
+##    Detection Prevalence : 0.628         
+##       Balanced Accuracy : 0.803         
+##                                         
+##        &#39;Positive&#39; Class : &lt;=50K         
+## </code></pre>
+</div>
+<div id="i-the-balanced-accuracy-of-the-model-is-80.3" class="section level3">
+<h3>(i) The balanced accuracy of the model is 80.3%</h3>
+</div>
+<div id="ii-the-balanced-error-rate-of-the-model-is-19.7" class="section level3">
+<h3>(ii) The balanced error rate of the model is 19.7%</h3>
+</div>
+<div id="iii-the-sensitivity-and-specificity-are-76.9-and-83.8-respectively." class="section level3">
+<h3>(iii) The sensitivity and specificity are 76.9% and 83.8% respectively.</h3>
+</div>
+<div id="iv-the-auc-of-the-roc-curve-is-84.5." class="section level3">
+<h3>(iv) The AUC of the ROC curve is 84.5%.</h3>
+<pre class="r"><code>balpred.rocr &lt;- predict(balanceModel, newdata=adultTest.df, type=&quot;prob&quot;)[,2]
+f.balpred &lt;- prediction(balpred.rocr, adultTest.df$income)
+f.balperf &lt;- performance(f.balpred, &quot;tpr&quot;, &quot;fpr&quot;)
+balauc &lt;- performance(f.balpred, measure = &quot;auc&quot;)
+plot(f.balperf, colorize=T, lwd=3,main=paste(&quot;AUC of ROC is &quot;, round(balauc@y.values[[1]], 4)))
+abline(0,1)</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+</div>
+<div id="f-the-first-model-was-not-balanced-therefore-it-was-more-likely-to-have-a-greater-sensitivity-to-the-label-50k.-however-this-sensitivity-caused-a-far-greater-number-of-false-positives-which-as-a-result-decreased-the-specificity-of-the-model.-therefore-the-overall-average-between-sensitivity-and-specificity-was-low-balance-accuracy.-on-the-other-hand-a-slight-decrease-in-sensitivity-in-the-balance-model-was-perfect-to-discover-more-true-negatives.-therefore-in-this-case-the-trade-of-sensitivity-produced-a-greater-balance-accuracy.-finally-the-measure-of-this-trade-was-a-slight-increase-in-0.24-in-the-roc-that-shows-that-the-variance-of-the-classifier-was-better-explained-by-the-second-model." class="section level2">
+<h2>(f) The first model was not balanced, therefore it was more likely to have a greater sensitivity to the label “&lt;=50K”. However this sensitivity caused a far greater number of false positives, which as a result decreased the specificity of the model. Therefore, the overall average between sensitivity and specificity was low (balance accuracy). On the other hand, a slight decrease in sensitivity in the balance model was perfect to discover more true negatives. Therefore, in this case, the trade of sensitivity produced a greater balance accuracy. Finally, the measure of this trade was a slight increase in 0.24 % in the ROC that shows that the variance of the classifier was better explained by the second model.</h2>
+<p>#2.2 Random Forest ## (a) Create a RF model using the entire training dataset.</p>
+<pre class="r"><code>set.seed(1122)
+model &lt;- randomForest(income ~ ., data=adultTrain.df,importance=T)</code></pre>
+<pre class="r"><code>pred &lt;- predict(model, adultTest.df, type=&quot;class&quot;)
+confusionMatrix(pred, as.factor(adultTest.df$income))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction &lt;=50K  &gt;50K
+##      &lt;=50K 10563  1340
+##      &gt;50K    797  2360
+##                                         
+##                Accuracy : 0.858         
+##                  95% CI : (0.852, 0.864)
+##     No Information Rate : 0.754         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.597         
+##                                         
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16        
+##                                         
+##             Sensitivity : 0.930         
+##             Specificity : 0.638         
+##          Pos Pred Value : 0.887         
+##          Neg Pred Value : 0.748         
+##              Prevalence : 0.754         
+##          Detection Rate : 0.701         
+##    Detection Prevalence : 0.790         
+##       Balanced Accuracy : 0.784         
+##                                         
+##        &#39;Positive&#39; Class : &lt;=50K         
+## </code></pre>
+<div id="i-the-balanced-accuracy-of-the-model-is-78.4" class="section level3">
+<h3>(i) The balanced accuracy of the model is 78.4%</h3>
+</div>
+<div id="ii-the-accuracy-of-the-model-is-85.8" class="section level3">
+<h3>(ii) The accuracy of the model is 85.8%</h3>
+</div>
+<div id="iii-the-sensitivity-and-specificity-are-93.0-and-63.8-respectively." class="section level3">
+<h3>(iii) The sensitivity and specificity are 93.0% and 63.8% respectively.</h3>
+</div>
+<div id="iv-there-are-75.4-observations-11360-labeled-50k-and-24.6-observations-3700-labeled-with-class-50k" class="section level3">
+<h3>(iv) There are 75.4% observations (11360) labeled “&lt;=50K” and 24.6% observations (3700) labeled with class “&gt;50K”</h3>
+<pre class="r"><code>table(adultTest.df$income)</code></pre>
+<pre><code>## 
+## &lt;=50K  &gt;50K 
+## 11360  3700</code></pre>
+</div>
+<div id="v-they-make-sense-because-there-is-a-reduction-in-the-error-by-the-ussage-of-several-trees-but-there-still-are-more-50k-observations-in-the-training-data-so-they-will-be-more-likely-to-be-flag-as-a-false-positive.-however-the-specificity-was-still-far-better-13.4-better-than-the-unbalance-desicion-tree-without-random-forest." class="section level3">
+<h3>(v) They make sense because there is a reduction in the error by the ussage of several trees but there still are more “&lt;=50K” observations in the training data so they will be more likely to be flag as a false positive. However, the specificity was still far better (13.4%) better than the unbalance desicion tree without random forest.</h3>
+</div>
+<div id="vi-for-meandecreaseaccuracy-the-most-important-variable-is-capital_gain-and-the-least-important-one-is-fnlwgt.-for-meandecreasegini-the-most-important-variable-is-relationship-and-the-least-important-one-is-race." class="section level3">
+<h3>(vi) For MeanDecreaseAccuracy, the most important variable is capital_gain and the least important one is fnlwgt. For MeanDecreaseGini, the most important variable is relationship and the least important one is race.</h3>
+<pre class="r"><code>varImpPlot(model)</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="vii-the-number-of-variables-tried-at-each-split-is-3." class="section level3">
+<h3>(vii) the number of variables tried at each split is 3.</h3>
+<pre class="r"><code>print(model)</code></pre>
+<pre><code>## 
+## Call:
+##  randomForest(formula = income ~ ., data = adultTrain.df, importance = T) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 3
+## 
+##         OOB estimate of  error rate: 13.78%
+## Confusion matrix:
+##       &lt;=50K &gt;50K class.error
+## &lt;=50K 21096 1557    0.068733
+## &gt;50K   2599 4909    0.346164</code></pre>
+</div>
+</div>
+<div id="b-tuning-rf-model-by-finding-the-best-mtry-value." class="section level2">
+<h2>(b) Tuning RF model by finding the best mtry value.</h2>
+<pre class="r"><code>mtry &lt;- tuneRF(adultTrain.df[,-ncol(adultTrain.df)], adultTrain.df$income, ntreeTry=500, stepFactor=1.5,improve=0.01, trace=TRUE, plot=TRUE)</code></pre>
+<pre><code>## mtry = 3  OOB error = 13.86% 
+## Searching left ...
+## mtry = 2     OOB error = 13.71% 
+## 0.011005 0.01 
+## Searching right ...
+## mtry = 4     OOB error = 14.14% 
+## -0.03193 0.01</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<pre class="r"><code>print(mtry)</code></pre>
+<pre><code>##       mtry OOBError
+## 2.OOB    2  0.13706
+## 3.OOB    3  0.13859
+## 4.OOB    4  0.14144</code></pre>
+<p>###(i) The default value of mtry is 4 because that is the we have 15 fields which can be binary split 4 times.</p>
+<div id="ii-the-optimal-split-value-is-2." class="section level3">
+<h3>(ii) The optimal split value is 2.</h3>
+</div>
+<div id="iii-creating-and-testing-new-model-with-mtry2" class="section level3">
+<h3>(iii) creating and testing new model with mtry=2</h3>
+<pre class="r"><code>optmodel &lt;- randomForest(income ~ ., data=adultTrain.df,importance=T,mtry=2)
+optpred &lt;-predict(optmodel, adultTest.df, type=&quot;class&quot;)
+confusionMatrix(optpred, as.factor(adultTest.df$income))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction &lt;=50K  &gt;50K
+##      &lt;=50K 10617  1358
+##      &gt;50K    743  2342
+##                                         
+##                Accuracy : 0.86          
+##                  95% CI : (0.855, 0.866)
+##     No Information Rate : 0.754         
+##     P-Value [Acc &gt; NIR] : &lt;2e-16        
+##                                         
+##                   Kappa : 0.601         
+##                                         
+##  Mcnemar&#39;s Test P-Value : &lt;2e-16        
+##                                         
+##             Sensitivity : 0.935         
+##             Specificity : 0.633         
+##          Pos Pred Value : 0.887         
+##          Neg Pred Value : 0.759         
+##              Prevalence : 0.754         
+##          Detection Rate : 0.705         
+##    Detection Prevalence : 0.795         
+##       Balanced Accuracy : 0.784         
+##                                         
+##        &#39;Positive&#39; Class : &lt;=50K         
+## </code></pre>
+<div id="the-balanced-accuracy-of-the-model-is-78.4" class="section level4">
+<h4>(1) The balanced accuracy of the model is 78.4%</h4>
+</div>
+<div id="the-accuracy-of-the-model-86.0" class="section level4">
+<h4>(2) The accuracy of the model 86.0%</h4>
+</div>
+<div id="the-sensitivity-and-specificity-of-the-model-are-93.5-and-63.3-respectively." class="section level4">
+<h4>(3) The sensitivity and specificity of the model are 93.5% and 63.3% respectively.</h4>
+</div>
+<div id="for-meandecreaseaccuracy-the-most-important-variable-is-capital_gain-and-least-important-is-fnlwgt.-for-meandecreasegini-the-most-important-variableis-capital_gain-and-the-least-important-one-is-race." class="section level4">
+<h4>(4) For MeanDecreaseAccuracy, the most important variable is capital_gain and least important is fnlwgt. For MeanDecreaseGini, the most important variableis capital_gain and the least important one is race.</h4>
+<pre class="r"><code>varImpPlot(optmodel)</code></pre>
+<p><img src="Decision_Trees_and_Association_Rules_files/figure-html/unnamed-chunk-21-1.png" width="672" /> ### (iv) Although the balance accuracy of the model was maintained, the overall accuracy was improved slightly (0.2%). The sensitivity was reduced and counterbalanced by an equal increase in the specificity of the model.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="association-rules" class="section level1">
+<h1>2.3 Association rules</h1>
+<pre class="r"><code>set.seed(1122)
+library(arules)
+library(arulesViz)
+setwd(&quot;.&quot;)
+rm(list=ls())</code></pre>
+<pre class="r"><code>trans &lt;- read.transactions(&quot;groceries.csv&quot;, sep=&quot;,&quot;)
+summary(trans)</code></pre>
+<pre><code>## transactions as itemMatrix in sparse format with
+##  9835 rows (elements/itemsets/transactions) and
+##  169 columns (items) and a density of 0.026091 
+## 
+## most frequent items:
+##       whole milk other vegetables       rolls/buns             soda           yogurt          (Other) 
+##             2513             1903             1809             1715             1372            34055 
+## 
+## element (itemset/transaction) length distribution:
+## sizes
+##    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23 
+## 2159 1643 1299 1005  855  645  545  438  350  246  182  117   78   77   55   46   29   14   14    9   11    4    6 
+##   24   26   27   28   29   32 
+##    1    1    1    1    3    1 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.00    2.00    3.00    4.41    6.00   32.00 
+## 
+## includes extended item information - examples:
+##             labels
+## 1 abrasive cleaner
+## 2 artif. sweetener
+## 3   baby cosmetics</code></pre>
+<div id="i-running-apriori-on-the-transaction-set-with-a-support-value-of-0.1.-using-the-default-we-generate-zero-rules." class="section level2">
+<h2>(i) Running apriori() on the transaction set with a support value of 0.1. Using the default, we generate zero rules.</h2>
+<pre class="r"><code>f_is &lt;-apriori(trans, parameter = list(support=0.1))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen maxlen target   ext
+##         0.8    0.1    1 none FALSE            TRUE       5     0.1      1     10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 983 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[169 item(s), 9835 transaction(s)] done [0.01s].
+## sorting and recoding items ... [8 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 done [0.00s].
+## writing ... [0 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>summary(f_is)</code></pre>
+<pre><code>## set of 0 rules</code></pre>
+<pre class="r"><code>rm(f_is)</code></pre>
+</div>
+<div id="ii-we-get-400-rules-by-having-a-support-value-of-0.001-in-order-to-get-at-least-400-rules-410-rules." class="section level2">
+<h2>(ii) We get 400 rules by having a support value of 0.001 in order to get at least 400 rules (410 rules).</h2>
+<p>inspect(sort(f_is, decreasing = T, by=“count”))</p>
+<pre class="r"><code>f_is &lt;-apriori(trans, parameter = list(support=0.001))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval originalSupport maxtime support minlen maxlen target   ext
+##         0.8    0.1    1 none FALSE            TRUE       5   0.001      1     10  rules FALSE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 9 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[169 item(s), 9835 transaction(s)] done [0.01s].
+## sorting and recoding items ... [157 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 6 done [0.02s].
+## writing ... [410 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<pre class="r"><code>summary(f_is)</code></pre>
+<pre><code>## set of 410 rules
+## 
+## rule length distribution (lhs + rhs):sizes
+##   3   4   5   6 
+##  29 229 140  12 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    3.00    4.00    4.00    4.33    5.00    6.00 
+## 
+## summary of quality measures:
+##     support          confidence         lift           count     
+##  Min.   :0.00102   Min.   :0.800   Min.   : 3.13   Min.   :10.0  
+##  1st Qu.:0.00102   1st Qu.:0.833   1st Qu.: 3.31   1st Qu.:10.0  
+##  Median :0.00122   Median :0.846   Median : 3.59   Median :12.0  
+##  Mean   :0.00125   Mean   :0.866   Mean   : 3.95   Mean   :12.3  
+##  3rd Qu.:0.00132   3rd Qu.:0.909   3rd Qu.: 4.34   3rd Qu.:13.0  
+##  Max.   :0.00315   Max.   :1.000   Max.   :11.24   Max.   :31.0  
+## 
+## mining info:
+##   data ntransactions support confidence
+##  trans          9835   0.001        0.8</code></pre>
+</div>
+<div id="iii-according-to-summary-the-most-frequent-element-is-whole-milk-bought-2513-times-followed-by-other-vegetables-bought-1903-times" class="section level2">
+<h2>(iii) According to summary the most frequent element is whole milk bought 2513 times followed by other vegetables bought 1903 times</h2>
+<pre class="r"><code>summary(trans)</code></pre>
+<pre><code>## transactions as itemMatrix in sparse format with
+##  9835 rows (elements/itemsets/transactions) and
+##  169 columns (items) and a density of 0.026091 
+## 
+## most frequent items:
+##       whole milk other vegetables       rolls/buns             soda           yogurt          (Other) 
+##             2513             1903             1809             1715             1372            34055 
+## 
+## element (itemset/transaction) length distribution:
+## sizes
+##    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15   16   17   18   19   20   21   22   23 
+## 2159 1643 1299 1005  855  645  545  438  350  246  182  117   78   77   55   46   29   14   14    9   11    4    6 
+##   24   26   27   28   29   32 
+##    1    1    1    1    3    1 
+## 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.00    2.00    3.00    4.41    6.00   32.00 
+## 
+## includes extended item information - examples:
+##             labels
+## 1 abrasive cleaner
+## 2 artif. sweetener
+## 3   baby cosmetics</code></pre>
+</div>
+<div id="iv-the-least-frequent-element-is-baby-food-with-only-one-item-sold." class="section level2">
+<h2>(iv) The least frequent element is baby food with only one item sold.</h2>
+<pre class="r"><code>sort(table(unlist(LIST(trans))))[1:1]</code></pre>
+<pre><code>## baby food 
+##         1</code></pre>
+</div>
+<div id="v-the-top-5-rules-sorted-by-suport-are" class="section level2">
+<h2>(v) The top 5 rules sorted by suport are:</h2>
+<pre class="r"><code>inspect(sort(f_is, by=&#39;support&#39;, decreasing = T)[1:5])</code></pre>
+<pre><code>##     lhs                                                         rhs                support   confidence lift   count
+## [1] {citrus fruit,root vegetables,tropical fruit,whole milk} =&gt; {other vegetables} 0.0031520 0.88571    4.5775 31   
+## [2] {curd,domestic eggs,other vegetables}                    =&gt; {whole milk}       0.0028470 0.82353    3.2230 28   
+## [3] {curd,hamburger meat}                                    =&gt; {whole milk}       0.0025419 0.80645    3.1562 25   
+## [4] {herbs,rolls/buns}                                       =&gt; {whole milk}       0.0024403 0.80000    3.1309 24   
+## [5] {herbs,tropical fruit}                                   =&gt; {whole milk}       0.0023386 0.82143    3.2148 23</code></pre>
+</div>
+<div id="vi-the-top-5-rules-sorted-by-confidence-are" class="section level2">
+<h2>(vi) The top 5 rules, sorted by confidence are:</h2>
+<pre class="r"><code>inspect(sort(f_is, by=&#39;confidence&#39;, decreasing = T)[1:5])</code></pre>
+<pre><code>##     lhs                                           rhs          support   confidence lift   count
+## [1] {rice,sugar}                               =&gt; {whole milk} 0.0012201 1          3.9136 12   
+## [2] {canned fish,hygiene articles}             =&gt; {whole milk} 0.0011185 1          3.9136 11   
+## [3] {butter,rice,root vegetables}              =&gt; {whole milk} 0.0010168 1          3.9136 10   
+## [4] {flour,root vegetables,whipped/sour cream} =&gt; {whole milk} 0.0017285 1          3.9136 17   
+## [5] {butter,domestic eggs,soft cheese}         =&gt; {whole milk} 0.0010168 1          3.9136 10</code></pre>
+</div>
+<div id="vii-the-bottom-5-rules-sorted-by-support-are" class="section level2">
+<h2>(vii) The bottom 5 rules, sorted by support are:</h2>
+<pre class="r"><code>inspect(sort(f_is, by=&#39;support&#39;, decreasing = F)[1:5])</code></pre>
+<pre><code>##     lhs                                       rhs          support   confidence lift   count
+## [1] {cereals,curd}                         =&gt; {whole milk} 0.0010168 0.90909    3.5579 10   
+## [2] {butter,jam}                           =&gt; {whole milk} 0.0010168 0.83333    3.2614 10   
+## [3] {pastry,sweet spreads}                 =&gt; {whole milk} 0.0010168 0.90909    3.5579 10   
+## [4] {butter,rice,root vegetables}          =&gt; {whole milk} 0.0010168 1.00000    3.9136 10   
+## [5] {other vegetables,rice,tropical fruit} =&gt; {whole milk} 0.0010168 0.83333    3.2614 10</code></pre>
+</div>
+<div id="viiithe-bottom-5-rules-sorted-by-confidence-are" class="section level2">
+<h2>(viii)The bottom 5 rules, sorted by confidence are:</h2>
+<pre class="r"><code>inspect(sort(f_is, by=&#39;confidence&#39;, decreasing = F)[1:5])</code></pre>
+<pre><code>##     lhs                                        rhs                support   confidence lift   count
+## [1] {curd,turkey}                           =&gt; {other vegetables} 0.0012201 0.8        4.1345 12   
+## [2] {fruit/vegetable juice,herbs}           =&gt; {other vegetables} 0.0012201 0.8        4.1345 12   
+## [3] {herbs,rolls/buns}                      =&gt; {whole milk}       0.0024403 0.8        3.1309 24   
+## [4] {onions,waffles}                        =&gt; {other vegetables} 0.0012201 0.8        4.1345 12   
+## [5] {root vegetables,tropical fruit,turkey} =&gt; {other vegetables} 0.0012201 0.8        4.1345 12</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

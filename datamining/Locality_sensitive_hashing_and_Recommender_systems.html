@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Hugo Trivino" />
+
+
+<title>Locality sensitive hashing &amp; Recommender systems</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- NOTE: add "navbar-inverse" class for an alternate navbar background -->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Hugo Trivino : Data Mining examples </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="Modeling_and_Linear_Regression.html">Modeling and Linear Regression</a></li>
+        <li><a href="Decision_Trees_and_Association_Rules.html">Decision Trees and Association Rules</a></li>
+        <li><a href="Clustering_and_PCA.html">Clustering and PCA</a></li>
+        <li><a href="Locality_sensitive_hashing_and_Recommender_systems.html">Locality sensitive hashing and Recommender systems</a></li>
+        <li><a href="http:/htrivino.com">personal Website</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Locality sensitive hashing &amp; Recommender systems</h1>
+<h4 class="author">Hugo Trivino</h4>
+
+</div>
+
+
+<pre class="r"><code>setwd(&quot;.&quot;)
+set.seed(1122)
+options(&quot;digits&quot;=3)
+library(textreuse)
+library(lsa)</code></pre>
+<div id="topic-locality-sensitive-hashing" class="section level1">
+<h1>2.1 Topic: Locality sensitive hashing</h1>
+<div id="a-visualizing-our-dataset-as-a-characteristic-matrix-what-is-the-size-rows-and-columns-of-our-characteristic-matrix" class="section level2">
+<h2>(a) Visualizing our dataset as a characteristic matrix, what is the size (rows and columns) of our characteristic matrix?</h2>
+<pre class="r"><code>files &lt;- list.files(&quot;./hw4.movies&quot;,full.names = T)
+corpus &lt;-TextReuseCorpus(files, tokenizer = tokenize_ngrams, n = 5,
+keep_tokens = TRUE,progress = F)
+shingles &lt;-c()
+for (x in 1:length(corpus)){
+  h &lt;- paste0(&quot;000&quot;,x)
+  user &lt;-&quot;user&quot;
+  user &lt;- paste0(user,substr(h,start=nchar(h)-2,nchar(h)))
+  shingles &lt;- union(shingles,tokens(corpus[[user]]))
+}
+cat(
+  paste0(&quot;(a) The characteristic matrix has &quot;,length(shingles), &quot; rows and &quot;, length(corpus),&quot; Columns\n&quot;)
+)</code></pre>
+<pre><code>## (a) The characteristic matrix has 157472 rows and 671 Columns</code></pre>
+<pre class="r"><code>rm(h,shingles,x,user)</code></pre>
+</div>
+<div id="b-lets-take-a-look-at-user-id-20.-for-this-user-answer-the-following-questions-by-examining-the-object-returned-from-corpususer20" class="section level2">
+<h2>(b) Let’s take a look at user ID 20. For this user, answer the following questions by examining the object returned from corpus[[“user20”]]</h2>
+<pre class="r"><code>d &lt;- corpus[[&quot;user020&quot;]]
+cat(
+  paste0(&quot;(i)\tThis user has rated: &quot;,stringr::str_count(d$content,&quot;\n&quot;),&quot; movies\n&quot;)
+)</code></pre>
+<pre><code>## (i)  This user has rated: 97 movies</code></pre>
+<pre class="r"><code>cat(&quot;(ii)\tThe first five shingles for this user are:\n&quot;)</code></pre>
+<pre><code>## (ii) The first five shingles for this user are:</code></pre>
+<pre class="r"><code>for (x in 1:5){
+  cat(paste(&quot;\t&quot;,x,&quot;-&gt; &quot;,tokens(d)[x],&quot;\n&quot;))
+}</code></pre>
+<pre><code>##   1 -&gt;  toy story 1995 twelve monkeys 
+##   2 -&gt;  story 1995 twelve monkeys a.k.a 
+##   3 -&gt;  1995 twelve monkeys a.k.a 12 
+##   4 -&gt;  twelve monkeys a.k.a 12 monkeys 
+##   5 -&gt;  monkeys a.k.a 12 monkeys 1995</code></pre>
+<pre class="r"><code>rm(x,d)</code></pre>
+</div>
+<div id="clets-find-similar-users-using-the-brute-force-pairwise-method-first.-using-pairwise_candidates-and-pairwise_compare-to-get-a-tibble-that-contains-all-of-the-pairwise-candidates." class="section level2">
+<h2>(c)Let’s find similar users using the brute-force pairwise method first. Using pairwise_candidates() and pairwise_compare(), to get a tibble that contains all of the pairwise candidates.</h2>
+<pre class="r"><code>res &lt;- pairwise_candidates(pairwise_compare(corpus, jaccard_similarity,progress = F))</code></pre>
+<pre class="r"><code>ans=&quot;&quot;
+for (x in which(res$score&gt;=0.4)){
+  ans&lt;-paste0(ans,res[x,1],&quot; &lt;--&gt; &quot;)
+  ans&lt;-paste0(ans,res[x,2],&quot; score of -&gt; &quot;)
+  ans&lt;-paste0(ans,res[x,3],&quot;\n\t &quot;)
+  
+}
+cat(
+  paste(
+    &quot; (i)\tThere are &quot;,length(which(res$score&gt;=0.6)),&quot; pairs with score at least 0.60\n&quot;,
+    &quot;(ii)\tThere are &quot;,length(which(res$score&gt;=0.5)),&quot; pairs with score at least 0.50\n&quot;,
+    &quot;(iii)\tThere are &quot;,length(which(res$score&gt;=0.4)),&quot; pairs with score at least 0.40\n&quot;,
+    &quot;(iv)\tThe pairs with a score of at least 0.4 are:\n\t&quot;,
+    ans
+  )
+)</code></pre>
+<pre><code>##  (i) There are  0  pairs with score at least 0.60
+##  (ii)    There are  0  pairs with score at least 0.50
+##  (iii)   There are  4  pairs with score at least 0.40
+##  (iv)    The pairs with a score of at least 0.4 are:
+##   user151 &lt;--&gt; user369 score of -&gt; 0.475836431226766
+##   user191 &lt;--&gt; user317 score of -&gt; 0.403361344537815
+##   user191 &lt;--&gt; user513 score of -&gt; 0.435897435897436
+##   user225 &lt;--&gt; user375 score of -&gt; 0.4
+##  </code></pre>
+<pre class="r"><code>rm(ans,x)</code></pre>
+</div>
+<div id="dnow-lets-prepare-to-use-lsh-and-find-candidate-pairs-in-a-more-optimized-manner.-first-we-determine-the-parameters-number-of-minhashes-and-bands." class="section level2">
+<h2>(d)Now, let’s prepare to use LSH and find candidate pairs in a more optimized manner. First, we determine the parameters (number of minhashes and bands).</h2>
+<pre class="r"><code>#print(&quot;(iv) The pairs with a score of at least 0.4 are:&quot;)
+r=1
+b=5
+
+cat(paste0(
+  &quot;(i) With &quot;,r*b,&quot; minhash signatures and &quot;,
+  b, &quot; bands, we can obtain a LSH probability of &quot;,
+  lsh_probability(h=r*b,  b=b, s=0.60),&quot;\n&quot;
+  #format(lsh_probability(h=r*b,  b=b, s=0.60)),digits=5)
+  )
+)</code></pre>
+<pre><code>## (i) With 5 minhash signatures and 5 bands, we can obtain a LSH probability of 0.98976</code></pre>
+<pre class="r"><code>minhash &lt;- minhash_generator(n=r*b, seed=100)
+corpus2 &lt;- TextReuseCorpus(files, tokenizer = tokenize_ngrams, n = 5,
+                          minhash_func = minhash, keep_tokens = TRUE,progress = F)
+cat(
+  &quot;(ii) The first minhashes of user020 are:\n\t&quot;,
+  paste(minhashes(corpus2[[&quot;user020&quot;]]),&quot;\n\t&quot;)
+)</code></pre>
+<pre><code>## (ii) The first minhashes of user020 are:
+##   -2146342451 
+##   -2123434886 
+##   -2118971265 
+##   -2127962146 
+##   -2139718033 
+##  </code></pre>
+</div>
+<div id="e-now-run-lsh-and-find-candidate-pairs-in-an-optimized-way.-then-answer-the-following" class="section level2">
+<h2>(e) Now run LSH and find candidate pairs in an optimized way. Then answer the following:</h2>
+<pre class="r"><code>lsh_threshold(h=b,b=5)</code></pre>
+<pre><code>## [1] 0.2</code></pre>
+<pre class="r"><code>buckets &lt;- lsh(corpus2, bands = 5, progress=F)
+candidates2 &lt;- lsh_candidates(buckets)
+res2 &lt;- lsh_compare(candidates2, corpus, jaccard_similarity,progress = F)</code></pre>
+<pre class="r"><code>ans=&quot;&quot;
+for (x in which(res2$score&gt;=0.4)){
+  ans&lt;-paste0(ans,res2[x,1],&quot; &lt;--&gt; &quot;)
+  ans&lt;-paste0(ans,res2[x,2],&quot; score of -&gt; &quot;)
+  ans&lt;-paste0(ans,res2[x,3],&quot;\n\t &quot;)
+  
+}
+cat(
+  paste0(
+    &quot;(i) I expect to find zero candidates with a Jaccard similarity between 0.60 and 0.50&quot;,
+         &quot; and there are &quot;,length(which(res2$score&gt;=0.5)), &quot; candidate pairs.&quot;,
+         &quot;I do not expect any candidate pairs since I expect to find 80% of s=0.6. And there are not pairs with such Jaccard similarity or with s &gt;=0.5.\n&quot;,
+    &quot;(ii)\t The pairs with a score of at least 0.4 are:\n\t &quot;,
+    ans,
+    &quot;\n  There were only &quot;, length(res2$a), &quot; comparisons.\n&quot;,
+    &quot;(iii) Only 75% are the same as shown in part (c)(iv).\n&quot;,
+    &quot;(iv) The number of comparisons performed in the optimized version is &quot;,
+    format(length(res2$a)/length(res$a)*100,digits = 4), &quot;% of the original comparison. &quot;,
+    &quot;Since there were only &quot;,length(res2$a),&quot; comparisons instead of &quot;,length(res$a),&quot; we saved &quot; , format(100-length(res2$a)/length(res$a)*100,digits = 4),&quot;% of the work.\n&quot;
+  )
+)</code></pre>
+<pre><code>## (i) I expect to find zero candidates with a Jaccard similarity between 0.60 and 0.50 and there are 0 candidate pairs.I do not expect any candidate pairs since I expect to find 80% of s=0.6. And there are not pairs with such Jaccard similarity or with s &gt;=0.5.
+## (ii)  The pairs with a score of at least 0.4 are:
+##   user151 &lt;--&gt; user369 score of -&gt; 0.475836431226766
+##   user191 &lt;--&gt; user317 score of -&gt; 0.403361344537815
+##   user191 &lt;--&gt; user513 score of -&gt; 0.435897435897436
+##   
+##   There were only 12067 comparisons.
+## (iii) Only 75% are the same as shown in part (c)(iv).
+## (iv) The number of comparisons performed in the optimized version is 5.368% of the original comparison. Since there were only 12067 comparisons instead of 224785 we saved 94.63% of the work.</code></pre>
+<pre class="r"><code>rm(list=ls())</code></pre>
+</div>
+</div>
+<div id="topic-content-based-recommendation-system-2-points" class="section level1">
+<h1>2.2 Topic: Content-based recommendation system (2 Points)</h1>
+<pre class="r"><code>ratings &lt;-  read.csv(file = &quot;ml-latest-small/ratings.csv&quot;,sep = &quot;,&quot;)
+
+movies &lt;-read.csv(file = &quot;ml-latest-small/movies.csv&quot;,sep = &quot;,&quot;)
+genreVector &lt;-c()
+
+for (genreLst in movies[,3]){
+  genxmovie&lt;-strsplit(genreLst,split = &quot;|&quot;,fixed = T)
+  for (genre in genxmovie){
+    genreVector&lt;-union(genre,genreVector)
+  }
+  if(length(genreVector)&gt;=20){
+    break
+  }
+}
+genreVector &lt;- sort(genreVector)
+createUserProfile &lt;-function(userID){
+    moviesId &lt;-c(ratings[which(ratings$userId== userID),c(2)])
+    genreMatrix&lt;-c()
+    moviesIdx &lt;- which(movies$movieId %in% moviesId)
+    for (genreLst in movies[moviesIdx,3]){
+      genxmovie&lt;-strsplit(genreLst,split = &quot;|&quot;,fixed = T)
+      for (genre in genxmovie){
+        genreMatrix&lt;-append(genreMatrix,genre)
+      }
+    }
+    userProfile &lt;-c()
+    for (genre in genreVector){
+      userProfile &lt;-append(userProfile,length(which(genreMatrix==genre)))
+    }
+    userProfile &lt;- userProfile /length(moviesIdx)
+    return(userProfile)
+}
+createMovieProfile &lt;-function(movieId){
+  movieIdx &lt;- which(movies$movieId == movieId)
+  genres &lt;- as.character(movies[movieIdx,3]) 
+  genres &lt;- strsplit(genres,&quot;|&quot;,fixed=T)
+  vG&lt;-c()
+  for (g in genres){
+    vG &lt;- union(vG,g)
+  }
+  genres &lt;-vG
+  genres &lt;-as.factor(genres)
+  movieProfile &lt;- c()
+  for (genre in genreVector){
+    movieProfile&lt;-append(movieProfile,genre %in% genres *1)
+  }
+  return(movieProfile)
+}
+
+set.seed(1122)
+user&lt;- 20391413 %% 671
+#user&lt;-1
+uservector &lt;-createUserProfile(user)
+moviesSeen &lt;- ratings$movieId[which(ratings$userId==user)]
+moviestorecomend &lt;-sample(movies$movieId,size = length(moviesSeen)+10)
+moviestorecomend &lt;-sample(setdiff(moviestorecomend,moviesSeen),size = 10)
+recommendable &lt;-c()
+movieName&lt;-c()
+for (movie in moviestorecomend){
+  recommendable &lt;- append(recommendable,cosine(createMovieProfile(movie),uservector))
+  movieName &lt;- rbind(movieName, movies[which(movies$movieId==movie),] )
+}
+
+recommender &lt;-data.frame(movieName[,1:2],recommendable,row.names = 1:10)
+recommender &lt;- data.frame(recommender[order(recommender$recommendable,decreasing = T),],row.names = 1:10)
+print(recommender[1:5,])</code></pre>
+<pre><code>##   movieId
+## 1    6223
+## 2  116207
+## 3   27156
+## 4   90249
+## 5    2908
+##                                                                                                                title
+## 1                                                                                                        Spun (2001)
+## 2                                                                                                        Zulu (2013)
+## 3 Neon Genesis Evangelion: The End of Evangelion (Shin seiki Evangelion Gekijô-ban: Air/Magokoro wo, kimi ni) (1997)
+## 4                                                                                                  Real Steel (2011)
+## 5                                                                                              Boys Don&#39;t Cry (1999)
+##   recommendable
+## 1         0.713
+## 2         0.593
+## 3         0.544
+## 4         0.535
+## 5         0.501</code></pre>
+</div>
+<div id="topic-collaborative-filtering-2-points" class="section level1">
+<h1>2.3 Topic: Collaborative Filtering (2 points)</h1>
+<div id="a-prediction-using-user-user-similarity" class="section level2">
+<h2>(a) Prediction using user-user similarity:</h2>
+<pre class="r"><code>user &lt;- 191
+userRating &lt;-ratings[which(ratings$userId ==user),]
+actualRating &lt;-userRating[which(userRating$movieId %in% c(150,296,380,590)),]
+userRating[which(userRating$movieId %in% c(150,296,380,590)),]$rating &lt;- NA
+#print(userRating)
+
+otherUsers &lt;-c(375, 225, 513, 50, 657)
+simUser &lt;- c(0.3049645,0.2420382,0.4358974,0.2009804, 0.2262774)
+rtnOther &lt;-c()
+rtnMatrix&lt;-data.frame()
+for (other in otherUsers){
+  rtnOther &lt;-c()
+  otherUserRating&lt;-ratings[which(ratings$userId==other),]
+  for (movieToRate in c(150,296,380,590)){
+    if (length(which(otherUserRating$movieId==movieToRate))&gt;0){
+      rtnOther&lt;-cbind(rtnOther,otherUserRating[which(otherUserRating$movieId==movieToRate),]$rating)
+    }else{
+      rtnOther&lt;-cbind(rtnOther,NA)
+    }
+  }
+  rtnMatrix &lt;-rbind(rtnMatrix,rtnOther)
+  #print(otherUserRating[which(otherUserRating$movieId %in% c(150,293,380,590)),])
+}
+
+colnames(rtnMatrix)&lt;-c(150,296,380,590)
+row.names(rtnMatrix)&lt;-otherUsers
+finalRating &lt;-c(0,0,0,0)
+for (x in 1:3){
+  for (y in 1:4){
+    finalRating[y] &lt;-finalRating[y]+rtnMatrix[x,y] * simUser[x]/sum(simUser[1:3])
+  }
+  
+}
+rmse &lt;-0
+cat(paste0(&quot;User ID 191, 5 random user IDs: 375, 225, 513, 50, 657\n&quot;,
+           &quot;Using user-user similarity, User ID 191 will rate the movies as follows:\n&quot;
+           ))</code></pre>
+<pre><code>## User ID 191, 5 random user IDs: 375, 225, 513, 50, 657
+## Using user-user similarity, User ID 191 will rate the movies as follows:</code></pre>
+<pre class="r"><code>for (c in 1:4) {
+  cat(paste0(c(150,296,380,590)[c],&quot;:&quot;,format(finalRating[c],digits=4),&quot;\n&quot;))
+  rmse &lt;- 1/4*((actualRating$rating[c] - finalRating[c])^2)^0.5 + rmse
+}</code></pre>
+<pre><code>## 150:3.867
+## 296:4.197
+## 380:3.557
+## 590:3.492</code></pre>
+<pre class="r"><code>cat(paste0(&quot;RMSE:&quot;,format(rmse,digits=4),&quot;\n&quot;))</code></pre>
+<pre><code>## RMSE:0.5</code></pre>
+</div>
+<div id="b-prediction-using-item-item-similarity" class="section level2">
+<h2>(b) Prediction using item-item similarity:</h2>
+<pre class="r"><code>user &lt;- 191
+userRating &lt;-ratings[which(ratings$userId ==user),]
+actualRating &lt;-userRating[which(userRating$movieId %in% c(150,296,380,590)),]
+userRating[which(userRating$movieId %in% c(150,296,380,590)),]$rating &lt;- NA
+#print(userRating)
+moviesSim &lt;-c()
+moviessimMatrix &lt;-c()
+moviesWatched &lt;- setdiff(userRating$movieId,c(150,296,380,590))
+for (x in c(150,296,380,590)){
+  profileMovie &lt;- createMovieProfile(x)
+  for (m in moviesWatched){
+    moviesSim &lt;- append(moviesSim,cosine(createMovieProfile(m),profileMovie))
+  }
+  moviessimMatrix &lt;-cbind(moviessimMatrix,moviesSim)
+  moviesSim &lt;-c()
+}
+#moviessimMatrix &lt;- data.frame(moviesSim[1:length(moviesWatched)],moviesSim[length(moviesWatched)+1:2*length(moviesWatched)],)
+moviessimMatrix&lt;-cbind(moviessimMatrix,moviesWatched)
+
+finalRating &lt;-c(0,0,0,0)
+for (m in 1:4){
+  neighboor &lt;- moviessimMatrix[order(moviessimMatrix[,m],decreasing=T),]
+  for (r in 1:3){
+    finalRating[m] &lt;- neighboor[r,m]/sum(neighboor[1:3,m])*userRating$rating[userRating$movieId==neighboor[r,5]] + finalRating[m] 
+}
+}
+cat(paste0(&quot;User ID 191, 5 random user IDs: 375, 225, 513, 50, 657\n&quot;,
+           &quot;Using item-item similarity, User ID 191 will rate the movies as follows:\n&quot;
+           ))</code></pre>
+<pre><code>## User ID 191, 5 random user IDs: 375, 225, 513, 50, 657
+## Using item-item similarity, User ID 191 will rate the movies as follows:</code></pre>
+<pre class="r"><code>for (c in 1:4) {
+  cat(paste0(c(150,296,380,590)[c],&quot;:&quot;,format(finalRating[c],digits=4),&quot;\n&quot;))
+  rmse &lt;- 1/4*((actualRating$rating[c] - finalRating[c])^2)^0.5 + rmse
+}</code></pre>
+<pre><code>## 150:2.828
+## 296:3.653
+## 380:2
+## 590:2.828</code></pre>
+<pre class="r"><code>cat(paste0(&quot;RMSE:&quot;,format(rmse,digits=4),&quot;\n&quot;))</code></pre>
+<pre><code>## RMSE:1.672</code></pre>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

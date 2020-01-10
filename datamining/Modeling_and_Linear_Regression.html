@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Hugo Trivino" />
+
+
+<title>Introduction &amp; Linear Regression Analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- NOTE: add "navbar-inverse" class for an alternate navbar background -->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Hugo Trivino : Data Mining examples </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="Modeling_and_Linear_Regression.html">Modeling and Linear Regression</a></li>
+        <li><a href="Decision_Trees_and_Association_Rules.html">Decision Trees and Association Rules</a></li>
+        <li><a href="Clustering_and_PCA.html">Clustering and PCA</a></li>
+        <li><a href="Locality_sensitive_hashing_and_Recommender_systems.html">Locality sensitive hashing and Recommender systems</a></li>
+        <li><a href="http:/htrivino.com">personal Website</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Introduction &amp; Linear Regression Analysis</h1>
+<h4 class="author">Hugo Trivino</h4>
+
+</div>
+
+
+<pre class="r"><code>setwd(&quot;.&quot;)
+library(psych)
+library(dplyr)</code></pre>
+<div id="practicum-problems" class="section level1">
+<h1>2 Practicum problems</h1>
+<div id="problem-2.1" class="section level2">
+<h2>Problem 2.1</h2>
+<div id="a-printing-first-6-records" class="section level3">
+<h3>a) Printing first 6 records</h3>
+<pre class="r"><code>college.df &lt;- read.csv(&quot;College.csv&quot;,sep=&quot;,&quot;,header=T,stringsAsFactors = F)
+head(college.df,6)</code></pre>
+<pre><code>##                           Name Private Apps Accept Enroll Top10perc Top25perc F.Undergrad P.Undergrad Outstate
+## 1 Abilene Christian University     Yes 1660   1232    721        23        52        2885         537     7440
+## 2           Adelphi University     Yes 2186   1924    512        16        29        2683        1227    12280
+## 3               Adrian College     Yes 1428   1097    336        22        50        1036          99    11250
+## 4          Agnes Scott College     Yes  417    349    137        60        89         510          63    12960
+## 5    Alaska Pacific University     Yes  193    146     55        16        44         249         869     7560
+## 6            Albertson College     Yes  587    479    158        38        62         678          41    13500
+##   Room.Board Books Personal PhD Terminal S.F.Ratio perc.alumni Expend Grad.Rate
+## 1       3300   450     2200  70       78      18.1          12   7041        60
+## 2       6450   750     1500  29       30      12.2          16  10527        56
+## 3       3750   400     1165  53       66      12.9          30   8735        54
+## 4       5450   450      875  92       97       7.7          37  19016        59
+## 5       4120   800     1500  76       72      11.9           2  10922        15
+## 6       3335   500      675  67       73       9.4          11   9727        55</code></pre>
+</div>
+<div id="b-printing-totals-private-vs-public-colleges" class="section level3">
+<h3>b) Printing totals private vs public colleges</h3>
+<pre class="r"><code>numPrivPubl&lt;-table(college.df$Private)
+names(numPrivPubl) &lt;- c(&quot;Public&quot;,&quot;Private&quot;)
+print(numPrivPubl)</code></pre>
+<pre><code>##  Public Private 
+##     212     565</code></pre>
+</div>
+<div id="c-historigrams-of-phd-holding-faculty" class="section level3">
+<h3>c) Historigrams of Phd holding faculty</h3>
+<p>As shown in the folloring graphs, public colleges have a higher mean of PhD faculty. There are almost no public universities with less of 45% PhD holding faculty. In the private sector, there are far more universities in which more faculty without a PhD are allowed to teach. However, a greater amount of private colleges have more than 90% of their faculty holding PhD’s than in public institutions. This results shows that there is a far greater variance in the private colleges in their faculty selection.</p>
+<pre class="r"><code>public.df &lt;- college.df[college.df$Private==&quot;No&quot;,][-c(2)]
+private.df &lt;- college.df[college.df$Private==&quot;Yes&quot;,][-c(2)]
+hist(public.df$PhD,
+     main=&quot;Phd Holders in Public Universities&quot;,
+     xlab=paste(&quot;Phd ( mean:&quot;,sprintf(&quot;%5.1f&quot;,mean(public.df$PhD)),&quot;)&quot;),
+     col=&quot;blue&quot;,
+     freq = FALSE,
+     nclass = 20)
+lines(density(public.df$PhD),col=&quot;black&quot;,type = &quot;l&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>hist(private.df$PhD,
+     main=&quot;Phd Holders in Private Universities&quot;,
+     xlab=paste(&quot;Phd ( mean:&quot;,sprintf(&quot;%5.1f&quot;,mean(private.df$PhD)),&quot;)&quot;),
+     freq=FALSE,
+     col=&quot;red&quot;,
+     nclass = 20
+)
+lines(density(private.df$PhD),col=&quot;black&quot;,type = &quot;l&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-4-2.png" width="672" /> ### d) Printing colleges with lowest and highest graduation rates. Colleges with the Lowest Graduation Rates</p>
+<pre class="r"><code>collegeGrad.df &lt;-college.df[college.df$Grad.Rate&lt;=100,]
+#There shouldn&#39;t be colleges with graduation rate higher than 100%
+CollByGradRate.df &lt;- select(arrange(collegeGrad.df,collegeGrad.df$Grad.Rate),Name,Grad.Rate)
+ head(CollByGradRate.df,5)</code></pre>
+<pre><code>##                        Name Grad.Rate
+## 1 Texas Southern University        10
+## 2 Alaska Pacific University        15
+## 3 Montreat-Anderson College        15
+## 4    Brewton-Parker College        18
+## 5           Claflin College        21</code></pre>
+<p>Colleges with the Highest Graduation Rates</p>
+<pre class="r"><code>tail(CollByGradRate.df,5)</code></pre>
+<pre><code>##                                Name Grad.Rate
+## 772              Lindenwood College       100
+## 773 Missouri Southern State College       100
+## 774          Santa Clara University       100
+## 775                   Siena College       100
+## 776          University of Richmond       100</code></pre>
+</div>
+<div id="e-print-summary-scatterplots-and-personal-insights-on-the-data." class="section level3">
+<h3>e) Print summary, scatterplots, and personal insights on the data.</h3>
+<div id="i" class="section level4">
+<h4>i)</h4>
+<pre class="r"><code>summary(college.df)</code></pre>
+<pre><code>##      Name             Private               Apps           Accept          Enroll       Top10perc      Top25perc    
+##  Length:777         Length:777         Min.   :   81   Min.   :   72   Min.   :  35   Min.   : 1.0   Min.   :  9.0  
+##  Class :character   Class :character   1st Qu.:  776   1st Qu.:  604   1st Qu.: 242   1st Qu.:15.0   1st Qu.: 41.0  
+##  Mode  :character   Mode  :character   Median : 1558   Median : 1110   Median : 434   Median :23.0   Median : 54.0  
+##                                        Mean   : 3002   Mean   : 2019   Mean   : 780   Mean   :27.6   Mean   : 55.8  
+##                                        3rd Qu.: 3624   3rd Qu.: 2424   3rd Qu.: 902   3rd Qu.:35.0   3rd Qu.: 69.0  
+##                                        Max.   :48094   Max.   :26330   Max.   :6392   Max.   :96.0   Max.   :100.0  
+##   F.Undergrad     P.Undergrad       Outstate       Room.Board       Books         Personal         PhD       
+##  Min.   :  139   Min.   :    1   Min.   : 2340   Min.   :1780   Min.   :  96   Min.   : 250   Min.   :  8.0  
+##  1st Qu.:  992   1st Qu.:   95   1st Qu.: 7320   1st Qu.:3597   1st Qu.: 470   1st Qu.: 850   1st Qu.: 62.0  
+##  Median : 1707   Median :  353   Median : 9990   Median :4200   Median : 500   Median :1200   Median : 75.0  
+##  Mean   : 3700   Mean   :  855   Mean   :10441   Mean   :4358   Mean   : 549   Mean   :1341   Mean   : 72.7  
+##  3rd Qu.: 4005   3rd Qu.:  967   3rd Qu.:12925   3rd Qu.:5050   3rd Qu.: 600   3rd Qu.:1700   3rd Qu.: 85.0  
+##  Max.   :31643   Max.   :21836   Max.   :21700   Max.   :8124   Max.   :2340   Max.   :6800   Max.   :103.0  
+##     Terminal       S.F.Ratio     perc.alumni       Expend        Grad.Rate    
+##  Min.   : 24.0   Min.   : 2.5   Min.   : 0.0   Min.   : 3186   Min.   : 10.0  
+##  1st Qu.: 71.0   1st Qu.:11.5   1st Qu.:13.0   1st Qu.: 6751   1st Qu.: 53.0  
+##  Median : 82.0   Median :13.6   Median :21.0   Median : 8377   Median : 65.0  
+##  Mean   : 79.7   Mean   :14.1   Mean   :22.7   Mean   : 9660   Mean   : 65.5  
+##  3rd Qu.: 92.0   3rd Qu.:16.5   3rd Qu.:31.0   3rd Qu.:10830   3rd Qu.: 78.0  
+##  Max.   :100.0   Max.   :39.8   Max.   :64.0   Max.   :56233   Max.   :118.0</code></pre>
+</div>
+<div id="ii." class="section level4">
+<h4>ii.</h4>
+<pre class="r"><code>#To look at a better resolution, uncomment
+#bitmap(&quot;colleges.tiff&quot;, height = 4, width = 4, units = &#39;in&#39;, type=&quot;tifflzw&quot;, res=300)
+pairs(college.df[,3:12],main=&quot;Colleges Correlations&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>pairs.panels(college.df[,3:12], 
+   main=&quot;Colleges Correlations&quot;,
+   pch=19
+   )</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-8-2.png" width="672" /> #### iii.</p>
+<pre class="r"><code>names&lt;-c(&quot;Private&quot;,&quot;Public&quot;)
+boxplot(college.df[college.df$Private==&quot;Yes&quot;,]$perc.alumni,college.df[college.df$Private==&quot;No&quot;,]$perc.alumni,names=names,ylab=&quot;Percentage&quot;)
+title(&quot;Alumni who Donate&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-9-1.png" width="672" /> #### iv.</p>
+<pre class="r"><code>names&lt;-c(&quot;Private&quot;,&quot;Public&quot;)
+boxplot(college.df[college.df$Private==&quot;Yes&quot;,]$PhD,college.df[college.df$Private==&quot;No&quot;,]$PhD,names=names,ylab=&quot;Percentage&quot;)
+title(&quot;Faculty with PhD&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-10-1.png" width="672" /> #### v.</p>
+<pre class="r"><code>college&lt;-college.df
+Elite &lt;- rep(&quot;No&quot;,nrow(college))
+Elite[college$Top10perc &gt; 50] &lt;-&quot;Yes&quot;
+Elite &lt;- as.factor(Elite)
+college &lt;-data.frame(college,Elite)
+summary(college)</code></pre>
+<pre><code>##      Name             Private               Apps           Accept          Enroll       Top10perc      Top25perc    
+##  Length:777         Length:777         Min.   :   81   Min.   :   72   Min.   :  35   Min.   : 1.0   Min.   :  9.0  
+##  Class :character   Class :character   1st Qu.:  776   1st Qu.:  604   1st Qu.: 242   1st Qu.:15.0   1st Qu.: 41.0  
+##  Mode  :character   Mode  :character   Median : 1558   Median : 1110   Median : 434   Median :23.0   Median : 54.0  
+##                                        Mean   : 3002   Mean   : 2019   Mean   : 780   Mean   :27.6   Mean   : 55.8  
+##                                        3rd Qu.: 3624   3rd Qu.: 2424   3rd Qu.: 902   3rd Qu.:35.0   3rd Qu.: 69.0  
+##                                        Max.   :48094   Max.   :26330   Max.   :6392   Max.   :96.0   Max.   :100.0  
+##   F.Undergrad     P.Undergrad       Outstate       Room.Board       Books         Personal         PhD       
+##  Min.   :  139   Min.   :    1   Min.   : 2340   Min.   :1780   Min.   :  96   Min.   : 250   Min.   :  8.0  
+##  1st Qu.:  992   1st Qu.:   95   1st Qu.: 7320   1st Qu.:3597   1st Qu.: 470   1st Qu.: 850   1st Qu.: 62.0  
+##  Median : 1707   Median :  353   Median : 9990   Median :4200   Median : 500   Median :1200   Median : 75.0  
+##  Mean   : 3700   Mean   :  855   Mean   :10441   Mean   :4358   Mean   : 549   Mean   :1341   Mean   : 72.7  
+##  3rd Qu.: 4005   3rd Qu.:  967   3rd Qu.:12925   3rd Qu.:5050   3rd Qu.: 600   3rd Qu.:1700   3rd Qu.: 85.0  
+##  Max.   :31643   Max.   :21836   Max.   :21700   Max.   :8124   Max.   :2340   Max.   :6800   Max.   :103.0  
+##     Terminal       S.F.Ratio     perc.alumni       Expend        Grad.Rate     Elite    
+##  Min.   : 24.0   Min.   : 2.5   Min.   : 0.0   Min.   : 3186   Min.   : 10.0   No :699  
+##  1st Qu.: 71.0   1st Qu.:11.5   1st Qu.:13.0   1st Qu.: 6751   1st Qu.: 53.0   Yes: 78  
+##  Median : 82.0   Median :13.6   Median :21.0   Median : 8377   Median : 65.0            
+##  Mean   : 79.7   Mean   :14.1   Mean   :22.7   Mean   : 9660   Mean   : 65.5            
+##  3rd Qu.: 92.0   3rd Qu.:16.5   3rd Qu.:31.0   3rd Qu.:10830   3rd Qu.: 78.0            
+##  Max.   :100.0   Max.   :39.8   Max.   :64.0   Max.   :56233   Max.   :118.0</code></pre>
+</div>
+<div id="vi." class="section level4">
+<h4>vi.</h4>
+<pre class="r"><code>par(mfrow=c(3,2))
+hist(college[college$Elite==&quot;Yes&quot;,]$PhD,
+     main = &quot;Elite Colleges&quot;,
+     xlab=paste(&quot;Phd Faculty (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;Yes&quot;,]$PhD))
+                        ,&quot;)&quot;),
+     col=&quot;green&quot;)
+hist(college[college$Elite==&quot;No&quot;,]$PhD,
+     main = &quot;Non-Elite Colleges&quot;,
+     xlab=paste(&quot;Phd Faculty (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;No&quot;,]$PhD))
+                        ,&quot;)&quot;),
+     col=&quot;red&quot;)
+hist(college[college$Elite==&quot;Yes&quot;,]$Grad.Rate,
+     main = &quot;Elite Colleges&quot;,
+     xlab=paste(&quot;Graduation Rate (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;Yes&quot;,]$Grad.Rate))
+                        ,&quot;)&quot;),
+     col=&quot;green&quot;)
+hist(college[college$Elite==&quot;No&quot;,]$Grad.Rate,
+     main = &quot;Non-Elite Colleges&quot;,
+     xlab=paste(&quot;Graduation Rate (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;No&quot;,]$Grad.Rate))
+                        ,&quot;)&quot;),
+     col=&quot;red&quot;)
+hist(college[college$Elite==&quot;Yes&quot;,]$Outstate,
+     main = &quot;Elite Colleges&quot;,
+     xlab=paste(&quot;Out-of-State Tuition (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;Yes&quot;,]$Outstate))
+                        ,&quot;)&quot;),
+     col=&quot;green&quot;)
+hist(college[college$Elite==&quot;No&quot;,]$Outstate,
+     main = &quot;Non-Elite Colleges&quot;,
+     xlab=paste(&quot;Out-of-State Tuition (mean:&quot;,
+                sprintf(&quot;%5.1f&quot;,mean(college[college$Elite==&quot;No&quot;,]$Outstate))
+                        ,&quot;)&quot;),
+     col=&quot;red&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-12-1.png" width="672" /> #### vii.</p>
+<p>We can observe that the elite colleges have a higher porcentage of donations from alumni than both public and private colleges without the outlayers in the higher end either. We can see that private colleges actually does not mean Elite college given by its low correlation. We can infer from these panels plots that the the retention rate in general is strongly negative correlated with the student faculty ratio of an institution. We observe that the elite colleges have a strong correlation with the precense of terminal professors as faculty which is contrary to the tendency of colleges in general.</p>
+<pre class="r"><code>names&lt;-c(&quot;Elite Colleges&quot;,&quot;Private Colleges&quot;,&quot;Public Colleges&quot;)
+boxplot(college[college$Elite==&quot;Yes&quot;,]$perc.alumni,
+        college.df[college.df$Private==&quot;Yes&quot;,]$perc.alumni,
+        college.df[college.df$Private==&quot;No&quot;,]$perc.alumni,
+        names=names,ylab=&quot;Percentage&quot;, main=&quot;Alumni Who Donate&quot;)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre class="r"><code>pairs.panels(college[,c(2,20,16,19,15)])</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+</div>
+</div>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>2.2 Linear regression</h2>
+<div id="a-cleaning-datasheet" class="section level3">
+<h3>(a) Cleaning datasheet</h3>
+<div id="i." class="section level4">
+<h4>i.</h4>
+<pre class="r"><code>mpg.df &lt;- read.csv(&quot;auto-mpg.csv&quot;,sep=&quot;,&quot;,header=T,stringsAsFactors = F)
+mpg.df &lt;- mpg.df[-c(which(mpg.df$horsepower== &quot;?&quot;)),]</code></pre>
+</div>
+<div id="ii.-1" class="section level4">
+<h4>ii.</h4>
+<pre class="r"><code>str(mpg.df$horsepower)</code></pre>
+<pre><code>##  chr [1:392] &quot;130&quot; &quot;165&quot; &quot;150&quot; &quot;150&quot; &quot;140&quot; &quot;198&quot; &quot;220&quot; &quot;215&quot; &quot;225&quot; &quot;190&quot; &quot;170&quot; &quot;160&quot; &quot;150&quot; &quot;225&quot; &quot;95&quot; &quot;95&quot; &quot;97&quot; ...</code></pre>
+<pre class="r"><code>mpg.df$horsepower &lt;- as.integer(mpg.df$horsepower)
+str(mpg.df$horsepower)</code></pre>
+<pre><code>##  int [1:392] 130 165 150 150 140 198 220 215 225 190 ...</code></pre>
+</div>
+</div>
+<div id="b-selecting-the-strongest-correlation" class="section level3">
+<h3>(b) Selecting the strongest correlation</h3>
+<pre class="r"><code>typ &lt;-c(&quot;double&quot;,&quot;integer&quot;,&quot;numeric&quot;)
+x&lt;-0
+y&lt;-0
+listCorr=c()
+namesOfCorr= c()
+listAbs=c()
+colNumber=c()
+for (variable in mpg.df) {
+  x=x+1
+  name &lt;-names(mpg.df)[x]
+  if(typeof(variable)%in% typ){
+    y=y+1
+    plotting.df &lt;-data.frame(mpg.df$mpg, variable)
+    namesOfCorr[y] &lt;-name
+    listCorr[y]&lt;-cor(plotting.df)[2]
+    listAbs[y]&lt;-abs(cor(plotting.df)[2])
+    colNumber[y]&lt;-x
+  }
+}
+corr.df=data.frame(listCorr, listAbs,namesOfCorr,colNumber)
+colnames(corr.df) &lt;- c(&quot;correlation&quot;,&quot;absValue&quot;,&quot;field&quot;,&quot;columnNumber&quot;)
+corr.df &lt;-corr.df[-c(1),]
+corr.df &lt;- arrange(corr.df,corr.df$absValue)
+
+pairs.panels(mpg.df[,c(1,tail(corr.df,1)$columnNumber)])</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<pre class="r"><code>model.mpg &lt;- lm(formula = paste(&quot;mpg ~ &quot;,tail(corr.df,1)$field,sep = &quot;&quot;) ,data = mpg.df)
+summary(model.mpg)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = paste(&quot;mpg ~ &quot;, tail(corr.df, 1)$field, sep = &quot;&quot;), 
+##     data = mpg.df)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -11.974  -2.756  -0.336   2.138  16.519 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 46.216525   0.798672    57.9   &lt;2e-16 ***
+## weight      -0.007647   0.000258   -29.6   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.33 on 390 degrees of freedom
+## Multiple R-squared:  0.693,  Adjusted R-squared:  0.692 
+## F-statistic:  879 on 1 and 390 DF,  p-value: &lt;2e-16</code></pre>
+</div>
+<div id="c-ploting-regression-line" class="section level3">
+<h3>(c) Ploting regression line</h3>
+<pre class="r"><code>plot(mpg.df[,c(tail(corr.df,1)$columnNumber,1)],main=&quot;Regression line of mpg ~ weight&quot;)
+abline(model.mpg)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<pre class="r"><code>set.seed(1122)
+index &lt;- sample(1:nrow(mpg.df), 0.80*dim(mpg.df)[1])
+train.df &lt;- mpg.df[index, ]
+test.df &lt;- mpg.df[-index, ]</code></pre>
+</div>
+<div id="d-training-model-based-on-dataset" class="section level3">
+<h3>(d) Training model based on dataset</h3>
+<pre class="r"><code>train.model &lt;- lm(formula = paste(&quot;mpg ~ &quot;,paste(corr.df$field,collapse = &quot; + &quot;)) ,data = train.df)
+summary(train.model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = paste(&quot;mpg ~ &quot;, paste(corr.df$field, collapse = &quot; + &quot;)), 
+##     data = train.df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.491 -1.942 -0.095  1.793 13.329 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  -1.85e+01   5.13e+00   -3.61  0.00036 ***
+## acceleration  1.38e-01   1.14e-01    1.21  0.22545    
+## origin        1.49e+00   3.12e-01    4.77  2.9e-06 ***
+## model.year    7.48e-01   5.63e-02   13.30  &lt; 2e-16 ***
+## cylinders    -5.34e-01   3.49e-01   -1.53  0.12707    
+## horsepower   -1.40e-03   1.54e-02   -0.09  0.92784    
+## displacement  2.09e-02   8.51e-03    2.45  0.01477 *  
+## weight       -6.92e-03   8.06e-04   -8.59  4.7e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 3.29 on 305 degrees of freedom
+## Multiple R-squared:  0.81,   Adjusted R-squared:  0.805 
+## F-statistic:  185 on 7 and 305 DF,  p-value: &lt;2e-16</code></pre>
+<div id="i.-1" class="section level4">
+<h4>i.</h4>
+<p>Since car.name is unique for each instance, it cannot be used as a predictor. #### ii.</p>
+<pre class="r"><code>train.model &lt;- lm(formula = paste(&quot;mpg ~ &quot;,paste(corr.df$field,collapse = &quot; + &quot;)) ,data = train.df)
+summary(train.model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = paste(&quot;mpg ~ &quot;, paste(corr.df$field, collapse = &quot; + &quot;)), 
+##     data = train.df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.491 -1.942 -0.095  1.793 13.329 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  -1.85e+01   5.13e+00   -3.61  0.00036 ***
+## acceleration  1.38e-01   1.14e-01    1.21  0.22545    
+## origin        1.49e+00   3.12e-01    4.77  2.9e-06 ***
+## model.year    7.48e-01   5.63e-02   13.30  &lt; 2e-16 ***
+## cylinders    -5.34e-01   3.49e-01   -1.53  0.12707    
+## horsepower   -1.40e-03   1.54e-02   -0.09  0.92784    
+## displacement  2.09e-02   8.51e-03    2.45  0.01477 *  
+## weight       -6.92e-03   8.06e-04   -8.59  4.7e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 3.29 on 305 degrees of freedom
+## Multiple R-squared:  0.81,   Adjusted R-squared:  0.805 
+## F-statistic:  185 on 7 and 305 DF,  p-value: &lt;2e-16</code></pre>
+</div>
+</div>
+<div id="e-selecting-only-three-strong-predictors" class="section level3">
+<h3>(e) Selecting only three strong predictors</h3>
+<div id="i.-these-three-predictors-were-determined-to-be-significant-in-the-previous-code" class="section level4">
+<h4>i. These three predictors were determined to be significant in the previous code</h4>
+<pre class="r"><code>train.model &lt;- lm(formula =mpg ~ origin + model.year + weight ,data = train.df)
+summary(train.model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = mpg ~ origin + model.year + weight, data = train.df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.828 -2.099 -0.098  1.755 13.570 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -1.68e+01   4.36e+00   -3.85  0.00014 ***
+## origin       1.23e+00   2.89e-01    4.26  2.7e-05 ***
+## model.year   7.31e-01   5.28e-02   13.84  &lt; 2e-16 ***
+## weight      -5.87e-03   2.86e-04  -20.56  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 3.3 on 309 degrees of freedom
+## Multiple R-squared:  0.805,  Adjusted R-squared:  0.804 
+## F-statistic:  426 on 3 and 309 DF,  p-value: &lt;2e-16</code></pre>
+</div>
+<div id="ii.-show-the-summary-of-the-new-model" class="section level4">
+<h4>ii. Show the summary of the new model</h4>
+<p>It contained a great <span class="math inline">\(R^2\)</span> value since it explains about 83% of the variance in the data. This is clearly a high percentage without overfiting to the training dataset.</p>
+<pre class="r"><code>summary(train.model)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = mpg ~ origin + model.year + weight, data = train.df)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -9.828 -2.099 -0.098  1.755 13.570 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) -1.68e+01   4.36e+00   -3.85  0.00014 ***
+## origin       1.23e+00   2.89e-01    4.26  2.7e-05 ***
+## model.year   7.31e-01   5.28e-02   13.84  &lt; 2e-16 ***
+## weight      -5.87e-03   2.86e-04  -20.56  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 3.3 on 309 degrees of freedom
+## Multiple R-squared:  0.805,  Adjusted R-squared:  0.804 
+## F-statistic:  426 on 3 and 309 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="r"><code>anova(train.model)</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Response: mpg
+##             Df Sum Sq Mean Sq F value Pr(&gt;F)    
+## origin       1   5586    5586     512 &lt;2e-16 ***
+## model.year   1   3767    3767     345 &lt;2e-16 ***
+## weight       1   4612    4612     423 &lt;2e-16 ***
+## Residuals  309   3373      11                   
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+</div>
+</div>
+<div id="f-ploting-the-residuals-shows-that-they-are-randomly-cluster-around-zero" class="section level3">
+<h3>(f) Ploting the residuals shows that they are randomly cluster around zero</h3>
+<pre class="r"><code>plot(train.model$residuals,col=&quot;blue&quot;)
+abline(0,0)</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-24-1.png" width="672" /> ### (g) We can see that the data is homosceadastic slightly skewed. But it looks almost as gaussian curve.</p>
+<pre class="r"><code>hist(train.model$residuals, freq = FALSE,col=&quot;yellow&quot;, nclass=20)
+lines(density(train.model$residuals))</code></pre>
+<p><img src="Modeling_and_Linear_Regression_files/figure-html/unnamed-chunk-25-1.png" width="672" /> ### (h) Finding exact matchs</p>
+<pre class="r"><code>dfs&lt;- data.frame(test.df$mpg,round(predict(train.model, newdata=test.df),0))
+differ &lt;- dfs[,1]-dfs[,2]
+colnames&lt;-c(&quot;difference&quot;)
+z=0
+for (variable in differ) {
+  if(variable == 0.0){
+    z=z+1
+  }  
+}
+
+print(paste(&#39;If the model prediction is rounded to an integer value, the predictor would match successfully &#39;,z,&quot; observations&quot;))</code></pre>
+<pre><code>## [1] &quot;If the model prediction is rounded to an integer value, the predictor would match successfully  7  observations&quot;</code></pre>
+<pre class="r"><code>dfs&lt;- data.frame(test.df$mpg,round(predict(train.model, newdata=test.df),1))
+differ &lt;- dfs[,1]-dfs[,2]
+colnames&lt;-c(&quot;difference&quot;)
+z=0
+for (variable in differ) {
+  if(variable == 0.0){
+    z=z+1
+  }  
+}
+
+print(paste(&#39;If the model prediction is rounded to one significant value, the predictor would match successfully &#39;,z,&quot; observations&quot;))</code></pre>
+<pre><code>## [1] &quot;If the model prediction is rounded to one significant value, the predictor would match successfully  1  observations&quot;</code></pre>
+<pre class="r"><code>#which(mpg.df$horsepower== &quot;?&quot;)
+#lines(dfs[,1])
+#lines(dfs[,2])</code></pre>
+<div id="i.-printing-the-error-based-statistics-only-using-the-residual-vector." class="section level4">
+<h4>i. Printing the error based statistics only using the residual vector.</h4>
+<pre class="r"><code>dfs&lt;- data.frame(test.df$mpg,round(predict(train.model, newdata=test.df),0))
+differ &lt;- dfs[,1]-dfs[,2]
+colnames&lt;-c(&quot;difference&quot;)
+z=0
+RSS&lt;-0
+ESS&lt;-0
+for (x in 1:length(dfs[,1])){
+  ESS=ESS + (dfs[x,1]-mean(dfs[,2]))^2
+}
+for (errs in differ) {
+    RSS=RSS+errs^2
+    #ESS=ESS+(errs-mean(differ))
+}
+RMSE=sqrt(mean((dfs[,1] -dfs[,2])^2))
+RSE=sqrt((RSS)/(length(differ)-2))
+TSS=ESS + RSS
+print(paste(&quot;RSS: &quot;,RSS))</code></pre>
+<pre><code>## [1] &quot;RSS:  1002.61&quot;</code></pre>
+<pre class="r"><code>print(paste(&quot;TSS: &quot;,TSS))</code></pre>
+<pre><code>## [1] &quot;TSS:  7467.01746835443&quot;</code></pre>
+<pre class="r"><code>print(paste(&quot;RSE: &quot;,RSE))</code></pre>
+<pre><code>## [1] &quot;RSE:  3.60844967969751&quot;</code></pre>
+<pre class="r"><code>print(paste(&quot;RMSE: &quot;,RMSE))</code></pre>
+<pre><code>## [1] &quot;RMSE:  3.56248029086265&quot;</code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

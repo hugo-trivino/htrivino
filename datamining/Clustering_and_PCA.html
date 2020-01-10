@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Hugo Trivino" />
+
+
+<title>Clustering and Principal Component Analysis</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <!-- NOTE: add "navbar-inverse" class for an alternate navbar background -->
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Hugo Trivino : Data Mining examples </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li><a href="Modeling_and_Linear_Regression.html">Modeling and Linear Regression</a></li>
+        <li><a href="Decision_Trees_and_Association_Rules.html">Decision Trees and Association Rules</a></li>
+        <li><a href="Clustering_and_PCA.html">Clustering and PCA</a></li>
+        <li><a href="Locality_sensitive_hashing_and_Recommender_systems.html">Locality sensitive hashing and Recommender systems</a></li>
+        <li><a href="http:/htrivino.com">personal Website</a></li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Clustering and Principal Component Analysis</h1>
+<h4 class="author">Hugo Trivino</h4>
+
+</div>
+
+
+<pre class="r"><code>setwd(&quot;.&quot;)
+set.seed(1122)
+options(&quot;digits&quot;=3)
+library(factoextra)
+library(ggplot2)
+library(dplyr)
+library(cluster)</code></pre>
+<div id="problem-1-k-means-clustering" class="section level1">
+<h1>2.1 Problem 1: K-means clustering</h1>
+<div id="a-data-cleanup" class="section level2">
+<h2>(a) Data cleanup</h2>
+<div id="i-so-far-i-think-all-the-attribute-are-relevant-for-the-clustering." class="section level3">
+<h3>(i) So far I think all the attribute are relevant for the clustering.</h3>
+<pre class="r"><code>text2csv &lt;- function(in.file,out.file) {
+  mammals.df &lt;- read.csv(file= in.file,
+                           header = FALSE,
+                           sep = &quot;&quot;,
+                           dec = &quot;.&quot;,
+                           comment.char = &quot;#&quot;
+                           
+                           )
+  
+  write.csv(mammals.df, file = out.file)
+  mammals.df &lt;- read.csv(file= out.file,
+                           header = TRUE,
+                           sep = &quot;,&quot;,
+                           dec = &quot;.&quot;,
+                           comment.char = &quot;#&quot;,
+                         skip = 4
+                           )
+  write.csv(mammals.df[,2:10], file = out.file,row.names = F)
+  mammals.df &lt;- read.csv(out.file,row.names = 1)
+  
+  return( mammals.df)
+}
+mammals.df &lt;- text2csv(in.file = &quot;file19.txt&quot;, out.file = &quot;mammals.csv&quot;)
+summary(mammals.df)</code></pre>
+<pre><code>##        I             i              C               c               P              p              M       
+##  Min.   :0.0   Min.   :0.00   Min.   :0.000   Min.   :0.000   Min.   :0.00   Min.   :0.00   Min.   :0.00  
+##  1st Qu.:1.0   1st Qu.:1.00   1st Qu.:0.000   1st Qu.:0.000   1st Qu.:2.00   1st Qu.:1.00   1st Qu.:1.00  
+##  Median :2.0   Median :3.00   Median :1.000   Median :1.000   Median :3.00   Median :3.00   Median :3.00  
+##  Mean   :1.8   Mean   :2.38   Mean   :0.591   Mean   :0.545   Mean   :2.56   Mean   :2.42   Mean   :2.45  
+##  3rd Qu.:3.0   3rd Qu.:3.00   3rd Qu.:1.000   3rd Qu.:1.000   3rd Qu.:3.00   3rd Qu.:3.00   3rd Qu.:3.00  
+##  Max.   :5.0   Max.   :4.00   Max.   :1.000   Max.   :1.000   Max.   :4.00   Max.   :4.00   Max.   :8.00  
+##        m       
+##  Min.   :0.00  
+##  1st Qu.:2.00  
+##  Median :3.00  
+##  Mean   :2.64  
+##  3rd Qu.:3.00  
+##  Max.   :8.00</code></pre>
+<pre class="r"><code>mammals.scaled &lt;- scale(mammals.df)
+rm(mammals.df)</code></pre>
+</div>
+<div id="ii-the-data-is-not-standardize-since-the-mean-is-not-zero." class="section level3">
+<h3>(ii) The data is not standardize since the mean is not zero.</h3>
+</div>
+<div id="iii-data-is-cleaned-in-the-function-text2csv-and-works-for-all-hartigan-file-format-the-resulting-file-is-named-mammals.csv." class="section level3">
+<h3>(iii) Data is cleaned in the function text2csv and works for all Hartigan file format, the resulting file is named “mammals.csv”.</h3>
+</div>
+</div>
+<div id="b-clustering-2-points-divided-evenly-by-components-below" class="section level2">
+<h2>(b) Clustering (2 points divided evenly by components below)</h2>
+<div id="i-according-to-wss-k-7-and-k9-are-good-numbers-but-silhouette-indicates-that-the-best-cluster-number-is-k8.-however-by-analyzing-output-in-part-vi-i-realized-that-k7-was-the-best-cluster-for-this-application." class="section level3">
+<h3>(i) According to WSS, k = 7 and k=9 are good numbers, but Silhouette indicates that the best cluster number is k=8. However, by analyzing output in part (vi) I realized that k=7 was the best cluster for this application.</h3>
+<pre class="r"><code>fviz_nbclust(mammals.scaled, kmeans, method=&quot;wss&quot;) # Elbow method minimizes total</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>fviz_nbclust(mammals.scaled, kmeans, method=&quot;silhouette&quot;) # Silhouette method</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+</div>
+<div id="ii-plotting-the-clusters-using-fviz_cluster." class="section level3">
+<h3>(ii) Plotting the clusters using fviz_cluster().</h3>
+<pre class="r"><code>set.seed(1122)
+kmu &lt;- kmeans(mammals.scaled, centers=7,nstart=40)
+#png(filename=&quot;mammalCluster.png&quot;, units = &quot;px&quot;, width=2000, height=2000)
+fviz_cluster(kmu, data=mammals.scaled)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>#dev.off()</code></pre>
+</div>
+<div id="iii-table-of-observations-per-cluster" class="section level3">
+<h3>(iii) Table of observations per cluster</h3>
+<pre class="r"><code>obsxclus &lt;-as.data.frame(table(kmu$cluster))
+names(obsxclus) &lt;-c(&quot;Cluster&quot;,&quot;Observations&quot;)
+print(obsxclus)</code></pre>
+<pre><code>##   Cluster Observations
+## 1       1           17
+## 2       2           19
+## 3       3            8
+## 4       4           10
+## 5       5            9
+## 6       6            2
+## 7       7            1</code></pre>
+<pre class="r"><code>rm(obsxclus)</code></pre>
+</div>
+<div id="iv-the-total-sum-of-square-errors" class="section level3">
+<h3>(iv) The total sum of square errors</h3>
+<pre class="r"><code>print(paste(&quot;Total SSE :&quot;, kmu$tot.withinss))</code></pre>
+<pre><code>## [1] &quot;Total SSE : 61.8750144556537&quot;</code></pre>
+</div>
+<div id="v-sse-for-each-cluster-is-shown-in-the-following-table" class="section level3">
+<h3>(v) SSE for each cluster is shown in the following table:</h3>
+<pre class="r"><code>SSExclus &lt;-c()
+for (x in 1:max(kmu$cluster)){
+  SSExclus &lt;-rbind(SSExclus,c(x,kmu$withinss[x]))
+}
+colnames(SSExclus) &lt;- c(&quot;Cluster&quot;, &quot;SSE&quot;)
+print(SSExclus)</code></pre>
+<pre><code>##      Cluster   SSE
+## [1,]       1 14.92
+## [2,]       2 15.57
+## [3,]       3  4.24
+## [4,]       4 18.58
+## [5,]       5  6.34
+## [6,]       6  2.22
+## [7,]       7  0.00</code></pre>
+<pre class="r"><code>rm(SSExclus,x)</code></pre>
+</div>
+<div id="vi-i-started-with-k7-then-i-did-k8-and-k9.-i-found-k7-to-be-the-best-fit-according-to-my-limited-knowledge-of-the-animal-kingdom-since-the-others-separate-the-squirrels-in-different-clusters-or-the-common-mole-from-other-mole-types.-this-is-my-final-group-separation" class="section level3">
+<h3>(vi) I started with k=7, then I did k=8, and k=9. I found k=7 to be the best fit according to my limited knowledge of the animal kingdom since the others separate the squirrels in different clusters or the common mole from other mole types. This is my final group separation:</h3>
+<pre class="r"><code>for (x in 1:max(kmu$cluster)){
+    cat(paste(&quot;Group &quot;,x, &quot;:\n&quot;,paste(names(which(kmu$cluster==x)),collapse = &quot;, &quot;)) ,&quot;\n&quot;) 
+}</code></pre>
+<pre><code>## Group  1 :
+##  Marten, Fisher, Weasel, Mink, Ferrer, Wolverine, Badger, Skunk, River otter, Sea otter, Jaguar, Ocelot, Cougar, Lynx, Fur seal, Sea lion, Grey seal 
+## Group  2 :
+##  Pika, Snowshoe rabbit, Beaver, Marmot, Groundhog, Prairie Dog, Ground Squirrel, Chipmunk, Gray squirrel, Fox squirrel, Pocket gopher, Kangaroo rat, Pack rat, Field mouse, Muskrat, Black rat, House mouse, Porcupine, Guinea pig 
+## Group  3 :
+##  Brown bat, Silver hair bat, Pigmy bat, House bat, Red bat, Hoary bat, Lump nose bat, Peccary 
+## Group  4 :
+##  Opossum, Hairy tail mole, Common mole, Star nose mole, Coyote, Wolf, Fox, Bear, Civet cat, Raccoon 
+## Group  5 :
+##  Elk, Deer, Moose, Reindeer, Antelope, Bison, Mountain goat, Musk ox, Mountain sheep 
+## Group  6 :
+##  Walrus, Elephant seal 
+## Group  7 :
+##  Armadillo</code></pre>
+<pre class="r"><code>rm(x)</code></pre>
+</div>
+</div>
+</div>
+<div id="problem-2-hierarchical-clustering" class="section level1">
+<h1>2.2 Problem 2: Hierarchical clustering</h1>
+<pre class="r"><code>set.seed(1122)
+mammals.sample &lt;-sample_n(read.csv(&quot;mammals.csv&quot;,row.names = 1),size = 35) </code></pre>
+<div id="arunning-hierarchical-clustering-on-the-data-set-using-factoextraeclust-method-and-using-the-clustering-algorithm-for-three-linkages-single-complete-and-average." class="section level2">
+<h2>(a)Running hierarchical clustering on the data-set using factoextra::eclust() method and using the clustering algorithm for three linkages: single, complete, and average.</h2>
+<pre class="r"><code>hclust.single &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;single&quot;)</code></pre>
+<pre><code>## Clustering k = 1,2,..., K.max (= 10): .. done
+## Bootstrapping, b = 1,2,..., B (= 100)  [one &quot;.&quot; per sample]:
+## .................................................. 50 
+## .................................................. 100</code></pre>
+<pre class="r"><code>hclust.complete &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;complete&quot;)</code></pre>
+<pre><code>## Clustering k = 1,2,..., K.max (= 10): .. done
+## Bootstrapping, b = 1,2,..., B (= 100)  [one &quot;.&quot; per sample]:
+## .................................................. 50 
+## .................................................. 100</code></pre>
+<pre class="r"><code>hclust.average &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;average&quot;)</code></pre>
+<pre><code>## Clustering k = 1,2,..., K.max (= 10): .. done
+## Bootstrapping, b = 1,2,..., B (= 100)  [one &quot;.&quot; per sample]:
+## .................................................. 50 
+## .................................................. 100</code></pre>
+<pre class="r"><code>fviz_dend(hclust.average,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T,main = &quot;Cluster Dendogram Using Average Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre class="r"><code>fviz_dend(hclust.complete,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T, main = &quot;Cluster Dendogram Using Complete Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
+<pre class="r"><code>fviz_dend(hclust.single,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T,main = &quot;Cluster Dendogram Using Single Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-11-3.png" width="672" /> ## (b) Finding the clusters formed by two singleton clusters.</p>
+<pre class="r"><code>print2sing &lt;- function(hc) {
+  for (x in 1:34){
+    if(hc$merge[x,1] &lt;0 &amp; hc$merge[x,2] &lt;0){
+      cat(paste(&quot;\t{&quot;,rownames(mammals.sample[ - hc$merge[x,1],] ),
+                  &quot;, &quot;,rownames(mammals.sample[ - hc$merge[x,2],] ),&quot;}\n&quot;))
+    }
+  }
+}
+cat(&quot;Two singleton clusters formed using Single Linkage:\n&quot;)</code></pre>
+<pre><code>## Two singleton clusters formed using Single Linkage:</code></pre>
+<pre class="r"><code>print2sing(hclust.single)</code></pre>
+<pre><code>##  { 1 ,  15 }
+##  { 2 ,  16 }
+##  { 3 ,  19 }
+##  { 5 ,  20 }
+##  { 7 ,  14 }
+##  { 13 ,  25 }
+##  { 21 ,  33 }
+##  { 6 ,  18 }
+##  { 12 ,  30 }</code></pre>
+<pre class="r"><code>cat(&quot;\nTwo singleton clusters formed using Complete Linkage\n&quot;)</code></pre>
+<pre><code>## 
+## Two singleton clusters formed using Complete Linkage</code></pre>
+<pre class="r"><code>print2sing(hclust.complete)</code></pre>
+<pre><code>##  { 1 ,  15 }
+##  { 2 ,  16 }
+##  { 3 ,  19 }
+##  { 5 ,  20 }
+##  { 7 ,  14 }
+##  { 13 ,  25 }
+##  { 21 ,  33 }
+##  { 6 ,  18 }
+##  { 12 ,  30 }
+##  { 10 ,  24 }</code></pre>
+<pre class="r"><code>cat(&quot;\nTwo singleton clusters formed using Average Linkage\n&quot;)</code></pre>
+<pre><code>## 
+## Two singleton clusters formed using Average Linkage</code></pre>
+<pre class="r"><code>print2sing(hclust.average)</code></pre>
+<pre><code>##  { 1 ,  15 }
+##  { 2 ,  16 }
+##  { 3 ,  19 }
+##  { 5 ,  20 }
+##  { 7 ,  14 }
+##  { 13 ,  25 }
+##  { 21 ,  33 }
+##  { 6 ,  18 }
+##  { 12 ,  30 }
+##  { 10 ,  24 }</code></pre>
+</div>
+<div id="c-by-defining-purity-as-the-linkage-strategy-that-produces-the-least-two-singleton-clusters-the-purest-linkage-strategies-is-single-linkage-given-that-produced-only-8-two-singleton-clusters-compared-to-the-others-linkages-that-produced-10.-i-will-pick-single-linkage-strategy-for-this-example." class="section level2">
+<h2>(c) By defining purity as the linkage strategy that produces the least two-singleton clusters, the purest linkage strategies is single linkage given that produced only 8 two singleton clusters compared to the others linkages that produced 10. I will pick Single linkage strategy for this example.</h2>
+</div>
+<div id="d-cutting-the-linkage-method-chosen-in-c-at-height-2-i-have-5-clusters-as-shown." class="section level2">
+<h2>(d) Cutting the linkage method chosen in (c) at height 2 I have 5 clusters as shown.</h2>
+<pre class="r"><code>plot(hclust.single,hang = -1,main = &quot;Cutting Single Linkage Dendogram at height 2&quot;)
+groups &lt;- cutree(hclust.single, h=2) 
+rect.hclust(hclust.single, h=2, border=&quot;red&quot;) </code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="e-using-the-value-k5-because-of-d-to-create-clusters-using-the-three-different-linkage-methods." class="section level2">
+<h2>(e) Using the value k=5 (because of (d)) to create clusters using the three different linkage methods.</h2>
+<pre class="r"><code>hclust.single &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;single&quot;,k=5)
+hclust.complete &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;complete&quot;,k=5)
+hclust.average &lt;- eclust(mammals.sample, FUNcluster = &quot;hclust&quot;,hc_method=&quot;average&quot;,k=5)
+fviz_dend(hclust.average,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T,main = &quot;Cluster Dendogram Using Average Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre class="r"><code>fviz_dend(hclust.complete,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T, main = &quot;Cluster Dendogram Using Complete Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-14-2.png" width="672" /></p>
+<pre class="r"><code>fviz_dend(hclust.single,show_labels=T ,palette=&quot;jco&quot;,cex = .6, hang=-.5,horiz = T,main = &quot;Cluster Dendogram Using Single Linkage&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-14-3.png" width="672" /></p>
+</div>
+<div id="fprinting-the-dunn-and-silhouette-width-using-fpccluster.stats-for-each-linkage-method." class="section level2">
+<h2>(f)Printing the Dunn and Silhouette width using fpc::cluster.stats() for each linkage method.</h2>
+<pre class="r"><code>pDunnSil &lt;-function(clust){
+  distance &lt;-dist(scale(mammals.sample))
+  tt&lt;-fpc::cluster.stats(distance,clust$cluster)
+  cat(paste(&quot;Dunn :&quot;,tt$dunn,&quot; ; Silhouette :&quot;,tt$avg.silwidth ,&quot;\n&quot;))
+}
+
+print(&quot;Printing Dunn and Silhouette for Single linkage&quot;)</code></pre>
+<pre><code>## [1] &quot;Printing Dunn and Silhouette for Single linkage&quot;</code></pre>
+<pre class="r"><code>pDunnSil(hclust.single)</code></pre>
+<pre><code>## Dunn : 0.498311590425928  ; Silhouette : 0.279715105214637</code></pre>
+<pre class="r"><code>print(&quot;Printing Dunn and Silhouette for Complete linkage&quot;)</code></pre>
+<pre><code>## [1] &quot;Printing Dunn and Silhouette for Complete linkage&quot;</code></pre>
+<pre class="r"><code>pDunnSil(hclust.complete)</code></pre>
+<pre><code>## Dunn : 0.264284056236123  ; Silhouette : 0.358050645951175</code></pre>
+<pre class="r"><code>print(&quot;Printing Dunn and Silhouette for Average linkage&quot;)</code></pre>
+<pre><code>## [1] &quot;Printing Dunn and Silhouette for Average linkage&quot;</code></pre>
+<pre class="r"><code>pDunnSil(hclust.average)</code></pre>
+<pre><code>## Dunn : 0.498311590425928  ; Silhouette : 0.279715105214637</code></pre>
+<pre class="r"><code>rm(hclust.single,hclust.complete,hclust.average)</code></pre>
+</div>
+<div id="g-according-to-the-dunn-index-the-best-linkage-is-the-single-linkage.-using-the-silhouette-method-the-best-linkage-strategy-is-also-single-linkage." class="section level2">
+<h2>(g) According to the Dunn index, the best linkage is the Single Linkage. Using the Silhouette method the best linkage strategy is also Single linkage.</h2>
+</div>
+</div>
+<div id="problem-3-k-means-and-pca" class="section level1">
+<h1>2.3 Problem 3: K-Means and PCA</h1>
+<pre class="r"><code>set.seed(1122)
+htru.df &lt;-read.csv(file = &quot;HTRU_2-small.csv&quot;)
+htru.pca &lt;- prcomp(scale(htru.df[,1:8]))</code></pre>
+<pre class="r"><code>htru.pca$sdev</code></pre>
+<pre><code>## [1] 2.039 1.458 0.898 0.674 0.511 0.398 0.143 0.124</code></pre>
+<pre class="r"><code>summary(htru.df)</code></pre>
+<pre><code>##       mean          std.dev        kurtosis        skewness     mean.dm.snr    std.dev.dm.snr  kurtosis.dm.snr
+##  Min.   :  5.8   Min.   :24.8   Min.   :-1.74   Min.   :-1.8   Min.   :  0.2   Min.   :  7.4   Min.   :-2.8   
+##  1st Qu.:100.8   1st Qu.:42.4   1st Qu.: 0.03   1st Qu.:-0.2   1st Qu.:  1.9   1st Qu.: 14.5   1st Qu.: 5.7   
+##  Median :114.9   Median :47.0   Median : 0.22   Median : 0.2   Median :  2.8   Median : 18.6   Median : 8.4   
+##  Mean   :110.9   Mean   :46.6   Mean   : 0.48   Mean   : 1.8   Mean   : 12.4   Mean   : 26.4   Mean   : 8.3   
+##  3rd Qu.:127.0   3rd Qu.:51.1   3rd Qu.: 0.48   3rd Qu.: 0.9   3rd Qu.:  5.6   3rd Qu.: 28.7   3rd Qu.:10.7   
+##  Max.   :189.7   Max.   :91.8   Max.   : 7.88   Max.   :65.4   Max.   :211.9   Max.   :110.6   Max.   :34.5   
+##  skewness.dm.snr     class      
+##  Min.   :  -2    Min.   :0.000  
+##  1st Qu.:  34    1st Qu.:0.000  
+##  Median :  82    Median :0.000  
+##  Mean   : 103    Mean   :0.096  
+##  3rd Qu.: 139    3rd Qu.:0.000  
+##  Max.   :1191    Max.   :1.000</code></pre>
+<div id="a-perform-pca-on-the-dataset-and-answer-the-following-questions" class="section level2">
+<h2>(a) Perform PCA on the dataset and answer the following questions:</h2>
+<div id="i-variance-explained-by-first-two-components" class="section level3">
+<h3>(i) Variance explained by first two components</h3>
+<pre class="r"><code>cat(paste(&quot;The first two components explain:\n&quot;,
+          format(100*sum(htru.pca$sdev[1:2])/sum(htru.pca$sdev),digits=4),
+          &quot;% of the variance&quot;
+          )
+    )</code></pre>
+<pre><code>## The first two components explain:
+##  55.99 % of the variance</code></pre>
+</div>
+<div id="ii-plotting-the-first-two-principal-components.-using-a-different-color-to-represent-the-observations-in-the-two-classes." class="section level3">
+<h3>(ii) Plotting the first two principal components. Using a different color to represent the observations in the two classes.</h3>
+<pre class="r"><code>first2 &lt;-htru.pca$x[,1:2]
+  plot(first2[,1],
+       first2[,2],
+       col=rainbow(n=1,v = c( htru.df$class==1,htru.df$class==0)),
+       xlab = paste(&quot;PC1 (&quot;,
+                    format(100*sum(htru.pca$sdev[1])/sum(htru.pca$sdev),digits=4),
+                    &quot;%)&quot;),
+       ylab = paste(&quot;PC2 (&quot;,
+                    format(100*sum(htru.pca$sdev[2])/sum(htru.pca$sdev),digits=4),
+                  &quot;%)&quot;),
+       main=&quot;Plotting using PCA with first two components&quot;
+      )</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+<div id="iii-by-observing-the-plotted-htru2-dataset-using-pca-we-can-see-that-most-of-the-the-class-labels-can-be-explained-by-pc1-being-greater-or-smaller-than-about-2" class="section level3">
+<h3>(iii) By observing the plotted HTRU2 dataset using PCA we can see that most of the the class labels can be explained by PC1 being greater or smaller than about 2</h3>
+</div>
+</div>
+<div id="b-we-know-that-the-htru2-dataset-has-two-classes.-we-will-now-use-k-means-on-the-htru2-dataset." class="section level2">
+<h2>(b) We know that the HTRU2 dataset has two classes. We will now use K-means on the HTRU2 dataset.</h2>
+<div id="i-performing-k-means-clustering-on-the-dataset-with-centers-2-and-nstart-25-and-plotting-the-resulting-clusters." class="section level3">
+<h3>(i) Performing K-means clustering on the dataset with centers = 2, and nstart = 25 and plotting the resulting clusters.</h3>
+<pre class="r"><code>khtwu&lt;- kmeans(scale(htru.df[,1:8]), centers=2,nstart=25)
+fviz_cluster(khtwu, 
+             data=scale(htru.df),
+             main=&quot;Plotting using Kmeans Using all components&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+</div>
+<div id="ii-the-shape-of-the-clusters-looks-fairly-similar-since-the-majority-of-the-variance-that-is-explained-in-kmeans-using-all-attributes-is-also-explained-in-pca-using-the-first-attributes-only-after-axis-rotation.-this-shows-why-dimensionality-reduction-is-possible-although-there-is-an-important-lost-of-variance-the-pca-clustering-still-have-some-predictive-power." class="section level3">
+<h3>(ii) The shape of the clusters looks fairly similar since the majority of the variance that is explained in Kmeans using all attributes is also explained in PCA using the first attributes only (after axis rotation). This shows why dimensionality reduction is possible although there is an important lost of variance, the PCA clustering still have some predictive power.</h3>
+</div>
+<div id="iii-what-is-the-distribution-of-the-observations-in-each-cluster" class="section level3">
+<h3>(iii) What is the distribution of the observations in each cluster?</h3>
+<pre class="r"><code>cat(paste0(&quot;In the Left  cluster (2), the percentage of observations is: &quot;,
+          format(100*sum(khtwu$cluster==2)/sum(khtwu$cluster==khtwu$cluster),digits=5),&quot; %\n&quot;,
+          &quot;In the Right cluster (1), the percentage of observations is: &quot;,
+          format(100*sum(khtwu$cluster==1)/sum(khtwu$cluster==khtwu$cluster),digits=5),&quot; %\n&quot;))</code></pre>
+<pre><code>## In the Left  cluster (2), the percentage of observations is: 88.47 %
+## In the Right cluster (1), the percentage of observations is: 11.53 %</code></pre>
+</div>
+<div id="iv-what-is-the-distribution-of-the-classes-in-the-htru2-dataset" class="section level3">
+<h3>(iv) What is the distribution of the classes in the HTRU2 dataset?</h3>
+<pre class="r"><code>cat(paste0(&quot;The &#39;TRUE&#39;  class label percentage of observations is:  &quot;,
+          format(100*sum(htru.df$class==1)/sum(htru.df$class==htru.df$class),digits=5),
+          &quot; %\n&quot;,
+          &quot;The &#39;FALSE&#39; class label percentage of observations is: &quot;,
+          format(100*sum(htru.df$class==0)/sum(htru.df$class==htru.df$class),digits=5),
+          &quot; %\n&quot;
+          )
+    )</code></pre>
+<pre><code>## The &#39;TRUE&#39;  class label percentage of observations is:  9.59 %
+## The &#39;FALSE&#39; class label percentage of observations is: 90.41 %</code></pre>
+</div>
+<div id="v-based-on-the-distribution-of-the-classes-in-biii-and-biv-i-believe-that-the-cluster-1-correspond-to-the-majority-class-while-the-cluster-2-correspond-to-the-minority-class." class="section level3">
+<h3>(v) Based on the distribution of the classes in (b)(iii) and (b)(iv), I believe that the cluster 1 correspond to the majority class while the cluster 2 correspond to the minority class.</h3>
+</div>
+<div id="vi" class="section level3">
+<h3>(vi)</h3>
+<pre class="r"><code>cat(paste0(&quot;From the larger cluster, &quot;,
+           format(100*sum(htru.df[which(khtwu$cluster==1),9]==0)/sum(khtwu$cluster==1),
+                  digits=4),
+           &quot; % belong to the majority class (0), while only &quot;,
+           format(100*sum(htru.df[which(khtwu$cluster==1),9]==1)/sum(khtwu$cluster==1),
+                  digits=4),
+           &quot; % belong to the minority class (1)&quot;
+           )
+    )</code></pre>
+<pre><code>## From the larger cluster, 36.17 % belong to the majority class (0), while only 63.83 % belong to the minority class (1)</code></pre>
+</div>
+<div id="vii-i-still-think-that-the-larger-cluster-represents-the-majority-class-label-0.-if-we-measure-the-model-evaluation-metrics-we-can-see-that-the-predictability-is-reasonable-for-this-cluster." class="section level3">
+<h3>(vii) I Still think that the larger cluster represents the majority class label (0). If we measure the model evaluation metrics we can see that the predictability is reasonable for this cluster.</h3>
+<pre class="r"><code>tn &lt;- 100*sum(htru.df[which(khtwu$cluster==1),9]==0)
+fn &lt;- 100*sum(htru.df[which(khtwu$cluster==1),9]==1)
+tp &lt;- 100*sum(htru.df[which(khtwu$cluster==2),9]==1)
+fp &lt;- 100*sum(htru.df[which(khtwu$cluster==2),9]==0)
+cat(paste0(
+        &quot;As a predictive model, it presents the following results:\n\taccuracy\t: &quot;,
+        format(100*(tn+tp)/(tp+tn+fp+fn),digits=4),
+        &quot;%\n\tError rate\t: &quot;,
+        format(100*(fn+fp)/(tp+tn+fp+fn),digits=4),
+        &quot;%\n\tPresicion\t: &quot;,
+        format(100*(tn)/(tn+fp),digits=4),
+        &quot;%\n\tSpecificity\t: &quot;,
+        format(100*(tp)/(tp+fp),digits=4),
+        &quot;%\n\t\tThis results are given that the positive class was the minority class (1)&quot;,
+        &quot;\nAlso, the balance accuracy (&quot;,
+        format(100*((tp)/(tp+fp)+(tn)/(tn+fp))/2,digits=4)        ,
+        &quot;%) is pretty good for such an imbalanced sample: &quot;
+    )
+)</code></pre>
+<pre><code>## As a predictive model, it presents the following results:
+##  accuracy    : 6.4%
+##  Error rate  : 93.6%
+##  Presicion   : 4.612%
+##  Specificity : 2.521%
+##      This results are given that the positive class was the minority class (1)
+## Also, the balance accuracy (3.566%) is pretty good for such an imbalanced sample:</code></pre>
+<pre class="r"><code>rm(tn,fn,tp,fp)</code></pre>
+<pre class="r"><code>  #htru.dist &lt;-dist(scale(htru.df[,1:8]))
+  #clusStats&lt;-fpc::cluster.stats(htru.dist,khtwu$cluster)</code></pre>
+</div>
+<div id="viii" class="section level3">
+<h3>(viii)</h3>
+<pre class="r"><code>  cat(paste0(&quot;The total Variance explained by the clustering is : &quot;,
+            format(100*(khtwu$tot.withinss/khtwu$totss),digits=4),
+            &quot; %&quot;)
+  )</code></pre>
+<pre><code>## The total Variance explained by the clustering is : 64.13 %</code></pre>
+</div>
+<div id="ix" class="section level3">
+<h3>(ix)</h3>
+<pre class="r"><code>#cat(paste(&quot;Average Silhouette width of both of the cluster is:&quot;,format(clusStats$avg.silwidth,digits=4) ,&quot;\n&quot;))
+silho&lt;-silhouette(khtwu$cluster, dist(scale(htru.df[,1:8])))
+cat(paste0(&quot;The average Silhouette width of both of the clusters is: &quot;,
+           format(sum(silho[,3])/sum(silho[,1]==silho[,1]),digits=4)
+           )
+    )</code></pre>
+<pre><code>## The average Silhouette width of both of the clusters is: 0.6007</code></pre>
+</div>
+<div id="xbased-on-the-silhouette-width-per-cluster-cluster-1-is-better" class="section level3">
+<h3>(x)Based on the Silhouette width per cluster, cluster 1 is better</h3>
+<pre class="r"><code>for (x in 1:2){
+  cat(paste0(&quot;The average Silhouette width of Cluster &quot;,x,&quot; is: &quot;,
+           format(sum(silho[which(silho[,1]==x),3])/sum(silho[,1]==x),digits=4)
+           ,&quot;\n&quot;
+           )
+    )
+}</code></pre>
+<pre><code>## The average Silhouette width of Cluster 1 is: 0.1516
+## The average Silhouette width of Cluster 2 is: 0.6592</code></pre>
+<pre class="r"><code>#print(&quot;Average Silhouette width per cluster&quot;)
+#clusStats$clus.avg.silwidths</code></pre>
+</div>
+</div>
+<div id="c-performing-k-means-on-the-result-of-the-pca-in-a.-using-only-the-first-two-principal-component-score-vectors." class="section level2">
+<h2>(c) Performing K-means on the result of the PCA in (a). Using only the first two principal component score vectors.</h2>
+<pre class="r"><code>set.seed(1122)
+khtwu&lt;- kmeans(scale(htru.pca$x[,1:2]), centers=2,nstart=25)</code></pre>
+<div id="i-in-the-following-plot-it-maintains-the-general-shape-but-the-clusters-changed-greatly-in-this-case-cluster-2-grew-considerably-into-cluster-1." class="section level3">
+<h3>(i) In the following plot it maintains the general shape but the clusters changed greatly, in this case cluster 2 grew considerably into cluster 1.</h3>
+<pre class="r"><code>fviz_cluster(khtwu, 
+             data=scale(htru.df),
+             main=&quot;Plotting using Kmeans Using PCA 2 Principal components&quot;)</code></pre>
+<p><img src="Clustering_and_PCA_files/figure-html/unnamed-chunk-30-1.png" width="672" /> ### (ii) Average Silhouette width for both clusters?</p>
+<pre class="r"><code>silho&lt;-silhouette(khtwu$cluster, dist(scale(htru.pca$x[,1:8])))
+cat(paste0(&quot;The average Silhouette width of both of the clusters is: &quot;,
+           format(sum(silho[,3])/sum(silho[,1]==silho[,1]),digits=4)
+           )
+    )</code></pre>
+<pre><code>## The average Silhouette width of both of the clusters is: 0.4292</code></pre>
+</div>
+<div id="iii-the-average-silhouette-width-is-better-for-cluster-2-therefore-cluster-2-is-the-better-cluster." class="section level3">
+<h3>(iii) The average Silhouette width is better for cluster 2, therefore, cluster 2 is the better cluster.</h3>
+<pre class="r"><code>for (x in 1:2){
+  cat(paste0(&quot;The average Silhouette width of cluster &quot;,x,&quot; is: &quot;,
+           format(sum(silho[which(silho[,1]==x),3])/sum(silho[,1]==x),digits=4)
+           ,&quot;\n&quot;
+           )
+    )
+}</code></pre>
+<pre><code>## The average Silhouette width of cluster 1 is: 0.4521
+## The average Silhouette width of cluster 2 is: 0.08426</code></pre>
+</div>
+<div id="iv-all-silhouette-values-in-part-c-are-smaller-than-the-silhouette-values-in-part-b.-however-the-general-tendencies-are-roughly-the-same-the-centroids-are-exchanged-in-this-case-too.-this-indicate-that-although-dimensionality-reduction-takes-a-great-deal-of-variance-and-quality-of-the-clusters-it-still-provides-the-same-information-about-general-tendencies." class="section level3">
+<h3>(iv) All Silhouette values in part C are smaller than the Silhouette values in part B. However, the general tendencies are roughly the same (The centroids are exchanged in this case too). This indicate that although dimensionality reduction takes a great deal of variance and quality of the clusters, it still provides the same information about general tendencies.</h3>
+<pre class="r"><code>rm(list=ls())</code></pre>
+</div>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
